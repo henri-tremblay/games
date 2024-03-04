@@ -4,9 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
 
@@ -14,7 +12,7 @@ import java.util.random.RandomGenerator;
 // Rebondir sur les palettes
 // Augmenter la balle de vitesse à chaque 10 secondes xxxx
 // Écrire le pointage
-// Utiliser un tampon d'affichage
+// Utiliser un tampon d'affichage xxx
 
 abstract class Sprite {
     protected double x, y;
@@ -105,67 +103,36 @@ public class App {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setLocation((d.width- SCREEN_WIDTH) / 2, (d.height - SCREEN_HEIGHT) / 2);
-        frame.createBufferStrategy(2);
-
-        BufferStrategy bufferStrategy = frame.getBufferStrategy();
 
         initPads();
         initBall();
 
-
-        // Offscreen buffer
-        BufferedImage image = new BufferedImage(SCREEN_WIDTH, SCREEN_HEIGHT, BufferedImage.TYPE_INT_RGB);
-
-        JPanel panel = new JPanel() {
-
-            @Override
-            public void paint(Graphics g) {
-//                g.drawImage(image, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-            }
-
-        };
-        panel.setFocusable(true);
-        panel.addKeyListener(new KeyAdapter() {
+        frame.addKeyListener(new KeyAdapter() {
 
             @Override
             public void keyPressed(KeyEvent e) {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_UP -> {
-                        right.vy = -10;
-                    }
-                    case KeyEvent.VK_DOWN -> {
-                        right.vy = 10;
-                    }
-                    case KeyEvent.VK_W -> {
-                        left.vy = -10;
-                    }
-                    case KeyEvent.VK_S -> {
-                        left.vy = 10;
-                    }
+                    case KeyEvent.VK_UP -> right.vy = -10;
+                    case KeyEvent.VK_DOWN -> right.vy = 10;
+                    case KeyEvent.VK_W -> left.vy = -10;
+                    case KeyEvent.VK_S -> left.vy = 10;
                 }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_UP -> {
-                        right.vy = 0;
-                    }
-                    case KeyEvent.VK_DOWN -> {
-                        right.vy = 0;
-                    }
-                    case KeyEvent.VK_W -> {
-                        left.vy = 0;
-                    }
-                    case KeyEvent.VK_S -> {
-                        left.vy = 0;
-                    }
+                    case KeyEvent.VK_UP, KeyEvent.VK_DOWN -> right.vy = 0;
+                    case KeyEvent.VK_W, KeyEvent.VK_S -> left.vy = 0;
+                    case KeyEvent.VK_SPACE -> initBall();
                 }
             }
         });
 
-//        frame.getContentPane().add(panel);
         frame.setVisible(true);
+        frame.createBufferStrategy(3);
+
+        BufferStrategy bufferStrategy = frame.getBufferStrategy();
 
         AtomicInteger ballLevel = new AtomicInteger(0);
 
@@ -179,17 +146,18 @@ public class App {
             right.move();
             ball.move();
 
-            Graphics g = image.getGraphics();
+            Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
 
-            fondEcran(g, Color.BLACK);
+            try {
+                fondEcran(g, Color.BLACK);
 
-            left.draw(g);
-            right.draw(g);
-            ball.draw(g);
-
-            g.dispose();
-
-            panel.repaint();
+                left.draw(g);
+                right.draw(g);
+                ball.draw(g);
+            } finally {
+                g.dispose();
+            }
+            bufferStrategy.show();
         }).start();
     }
 
