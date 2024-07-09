@@ -1,5 +1,8 @@
 package pro.tremblay.pong;
 
+import pro.tremblay.framework.Game;
+import pro.tremblay.framework.Sprite;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
@@ -8,7 +11,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
-import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
 
@@ -17,38 +19,6 @@ import java.util.random.RandomGenerator;
 // Augmenter la balle de vitesse à chaque 10 secondes xxxx
 // Écrire le pointage xxx
 // Utiliser un tampon d'affichage xxx
-
-abstract class Sprite {
-    protected double x, y;
-    protected double vx, vy;
-
-    public void position(double x, double y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public void speed(double vx, double vy) {
-        this.vx = vx;
-        this.vy = vy;
-    }
-
-    public void move() {
-        x += vx;
-        y += vy;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Sprite.class.getSimpleName() + "[", "]")
-                .add("x=" + x)
-                .add("y=" + y)
-                .add("vx=" + vx)
-                .add("vy=" + vy)
-                .toString();
-    }
-
-    public abstract void draw(Graphics g);
-}
 
 class Pad extends Sprite {
     static final int WIDTH = 30;
@@ -60,8 +30,8 @@ class Pad extends Sprite {
         super.move();
         if (y < 0) {
             y  = 0;
-        } else if (y + HEIGHT > App.SCREEN_HEIGHT) {
-            y = App.SCREEN_HEIGHT - HEIGHT;
+        } else if (y + HEIGHT > Game.SCREEN_HEIGHT) {
+            y = Game.SCREEN_HEIGHT - HEIGHT;
         }
     }
 
@@ -83,8 +53,8 @@ class Ball extends Sprite {
         if (y < 0) {
             y  = 0;
             vy = -vy;
-        } else if (y + DIAMETER > App.SCREEN_HEIGHT) {
-            y = App.SCREEN_HEIGHT - DIAMETER;
+        } else if (y + DIAMETER > Game.SCREEN_HEIGHT) {
+            y = Game.SCREEN_HEIGHT - DIAMETER;
             vy = -vy;
         }
     }
@@ -112,13 +82,11 @@ class Score extends Sprite {
     }
 }
 
-public class App {
-    static final int SCREEN_WIDTH = 1024;
-    static final int SCREEN_HEIGHT = 768;
+public class Pong extends Game {
     static double ballSpeed = 15;
 
     public static void main(String[] args) {
-        App app = new App();
+        Pong app = new Pong();
         app.start();
     }
 
@@ -127,60 +95,14 @@ public class App {
     private final Ball ball = new Ball();
     private final Score score = new Score();
 
-    private void start() {
-
-        JFrame frame = new JFrame("Pong Édouard");
-        frame.setSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
-        frame.setResizable(false);
-        frame.setLocationRelativeTo(null);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setUndecorated(true);
-
-        initPads();
-        initBall();
-        initScore();
-
-        frame.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                frame.setTitle("Pong Édouard (" + e.getX() + "," + e.getY());
-            }
-        });
-
-        frame.addKeyListener(new KeyAdapter() {
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                switch (e.getKeyCode()) {
-                    case KeyEvent.VK_UP -> right.vy = -Pad.INITIAL_SPEED;
-                    case KeyEvent.VK_DOWN -> right.vy = Pad.INITIAL_SPEED;
-                    case KeyEvent.VK_W -> left.vy = -Pad.INITIAL_SPEED;
-                    case KeyEvent.VK_S -> left.vy = Pad.INITIAL_SPEED;
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                switch (e.getKeyCode()) {
-                    case KeyEvent.VK_UP, KeyEvent.VK_DOWN -> right.vy = 0;
-                    case KeyEvent.VK_W, KeyEvent.VK_S -> left.vy = 0;
-                    case KeyEvent.VK_SPACE -> initBall();
-                    case KeyEvent.VK_ESCAPE -> System.exit(0);
-                }
-            }
-        });
-
-        frame.setVisible(true);
-        frame.createBufferStrategy(3);
-
-        BufferStrategy bufferStrategy = frame.getBufferStrategy();
-
+    @Override
+    protected void play(BufferStrategy bufferStrategy) {
         AtomicInteger ballLevel = new AtomicInteger(0);
 
         new Timer(100, e -> {
             if (ballLevel.incrementAndGet() % 50 == 0) {
                 double plusOneRatio = (ballSpeed + 2) / ballSpeed;
-                ball.speed(ball.vx * plusOneRatio, ball.vy * plusOneRatio);
+                ball.speed(ball.vx() * plusOneRatio, ball.vy() * plusOneRatio);
                 ballSpeed++;
             }
             left.move();
@@ -191,10 +113,10 @@ public class App {
             collisionLeft();
             collisionRight();
 
-            if (ball.x <= 50) {
+            if (ball.x() <= 50) {
                 score.right++;
                 initBall();
-            } else if (ball.x > SCREEN_WIDTH - 50) {
+            } else if (ball.x() > SCREEN_WIDTH - 50) {
                 score.left++;
                 initBall();
             }
@@ -216,6 +138,48 @@ public class App {
         }).start();
     }
 
+    @Override
+    protected void init(JFrame frame) {
+        initPads();
+        initBall();
+        initScore();
+
+        frame.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                frame.setTitle("Pong Édouard (" + e.getX() + "," + e.getY());
+            }
+        });
+
+        frame.addKeyListener(new KeyAdapter() {
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_UP -> right.vy(-Pad.INITIAL_SPEED);
+                    case KeyEvent.VK_DOWN -> right.vy(Pad.INITIAL_SPEED);
+                    case KeyEvent.VK_W -> left.vy(-Pad.INITIAL_SPEED);
+                    case KeyEvent.VK_S -> left.vy(Pad.INITIAL_SPEED);
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_UP, KeyEvent.VK_DOWN -> right.vy(0);
+                    case KeyEvent.VK_W, KeyEvent.VK_S -> left.vy(0);
+                    case KeyEvent.VK_SPACE -> initBall();
+                    case KeyEvent.VK_ESCAPE -> System.exit(0);
+                }
+            }
+        });
+    }
+
+    @Override
+    protected String frameTitle() {
+        return "Pong Édouard";
+    }
+
     private void collisionRight() {
         collision(right);
     }
@@ -225,10 +189,10 @@ public class App {
     }
 
     private void collision(Pad pad) {
-        Rectangle2D.Double padRect = new Rectangle2D.Double(pad.x, pad.y, Pad.WIDTH, Pad.HEIGHT);
-        Rectangle2D.Double ballRect = new Rectangle2D.Double(ball.x, ball.y, Ball.DIAMETER, Ball.DIAMETER);
+        Rectangle2D.Double padRect = new Rectangle2D.Double(pad.x(), pad.y(), Pad.WIDTH, Pad.HEIGHT);
+        Rectangle2D.Double ballRect = new Rectangle2D.Double(ball.x(), ball.y(), Ball.DIAMETER, Ball.DIAMETER);
         if (padRect.intersects(ballRect)) {
-            ball.speed(-ball.vx, ball.vy);
+            ball.speed(-ball.vx(), ball.vy());
         }
     }
 
@@ -243,6 +207,7 @@ public class App {
     }
 
     private void initBall() {
+        ballSpeed = 15;
         double angle = findGoodAngle();
         ball.position((SCREEN_WIDTH - Ball.DIAMETER) / 2, (SCREEN_HEIGHT - Ball.DIAMETER) / 2);
         double ballvx = (Math.cos(angle) * ballSpeed);
