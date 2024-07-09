@@ -5,13 +5,19 @@ import java.awt.*;
 import java.awt.image.BufferStrategy;
 
 public abstract class Game {
-    public static final int SCREEN_WIDTH = 1024;
-    public static final int SCREEN_HEIGHT = 768;
+
+    public int screenWidth() {
+        return 1024;
+    }
+
+    public int screenHeight() {
+        return 768;
+    }
 
     public void start() {
 
         JFrame frame = new JFrame(frameTitle());
-        frame.setSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
+        frame.setSize(new Dimension(screenWidth(), screenHeight()));
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

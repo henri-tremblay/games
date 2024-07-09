@@ -4,8 +4,13 @@ import java.awt.Graphics;
 import java.util.StringJoiner;
 
 public abstract class Sprite {
+    protected final Game game;
     protected double x, y;
     protected double vx, vy;
+
+    protected Sprite(Game game) {
+        this.game = game;
+    }
 
     public void position(double x, double y) {
         this.x = x;

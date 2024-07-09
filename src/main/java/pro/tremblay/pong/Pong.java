@@ -25,13 +25,17 @@ class Pad extends Sprite {
     static final int HEIGHT = 150;
     static final int INITIAL_SPEED = 15;
 
+    public Pad(Game game) {
+        super(game);
+    }
+
     @Override
     public void move() {
         super.move();
         if (y < 0) {
             y  = 0;
-        } else if (y + HEIGHT > Game.SCREEN_HEIGHT) {
-            y = Game.SCREEN_HEIGHT - HEIGHT;
+        } else if (y + HEIGHT > game.screenHeight()) {
+            y = game.screenHeight() - HEIGHT;
         }
     }
 
@@ -47,14 +51,18 @@ class Pad extends Sprite {
 class Ball extends Sprite {
     static final int DIAMETER = 50;
 
+    public Ball(Game game) {
+        super(game);
+    }
+
     @Override
     public void move() {
         super.move();
         if (y < 0) {
             y  = 0;
             vy = -vy;
-        } else if (y + DIAMETER > Game.SCREEN_HEIGHT) {
-            y = Game.SCREEN_HEIGHT - DIAMETER;
+        } else if (y + DIAMETER > game.screenHeight()) {
+            y = game.screenHeight() - DIAMETER;
             vy = -vy;
         }
     }
@@ -68,6 +76,10 @@ class Ball extends Sprite {
 
 class Score extends Sprite {
     int left, right;
+
+    public Score(Game game) {
+        super(game);
+    }
 
     @Override
     public void draw(Graphics g) {
@@ -90,10 +102,10 @@ public class Pong extends Game {
         app.start();
     }
 
-    private final Pad left = new Pad();
-    private final Pad right = new Pad();
-    private final Ball ball = new Ball();
-    private final Score score = new Score();
+    private final Pad left = new Pad(this);
+    private final Pad right = new Pad(this);
+    private final Ball ball = new Ball(this);
+    private final Score score = new Score(this);
 
     @Override
     protected void play(BufferStrategy bufferStrategy) {
@@ -116,7 +128,7 @@ public class Pong extends Game {
             if (ball.x() <= 50) {
                 score.right++;
                 initBall();
-            } else if (ball.x() > SCREEN_WIDTH - 50) {
+            } else if (ball.x() > screenWidth() - 50) {
                 score.left++;
                 initBall();
             }
@@ -198,18 +210,18 @@ public class Pong extends Game {
 
     private void ligneDuCentre(Graphics2D g) {
         g.setColor(Color.YELLOW);
-        g.drawLine(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
+        g.drawLine(screenWidth() / 2, 0, screenWidth() / 2, screenHeight());
     }
 
     private void fondEcran(Graphics g, Color color) {
         g.setColor(color);
-        g.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        g.fillRect(0, 0, screenWidth(), screenHeight());
     }
 
     private void initBall() {
         ballSpeed = 15;
         double angle = findGoodAngle();
-        ball.position((SCREEN_WIDTH - Ball.DIAMETER) / 2, (SCREEN_HEIGHT - Ball.DIAMETER) / 2);
+        ball.position((screenWidth() - Ball.DIAMETER) / 2, (screenHeight() - Ball.DIAMETER) / 2);
         double ballvx = (Math.cos(angle) * ballSpeed);
         double ballvy = (Math.sin(angle) * ballSpeed);
         ball.speed(ballvx, ballvy);
@@ -231,14 +243,14 @@ public class Pong extends Game {
     }
 
     private void initPads() {
-        int padY = (SCREEN_HEIGHT - Pad.HEIGHT) / 2;
+        int padY = (screenHeight() - Pad.HEIGHT) / 2;
         left.position(50, padY);
-        right.position(SCREEN_WIDTH - 50 - Pad.WIDTH, padY);
+        right.position(screenWidth() - 50 - Pad.WIDTH, padY);
         left.speed(0, 0);
         right.speed(0, 0);
     }
 
     private void initScore() {
-        score.position(SCREEN_WIDTH / 2 - 15, 40);
+        score.position(screenWidth() / 2 - 15, 40);
     }
 }
