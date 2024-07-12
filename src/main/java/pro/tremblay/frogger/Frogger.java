@@ -3,16 +3,18 @@ package pro.tremblay.frogger;
 import pro.tremblay.framework.Game;
 import pro.tremblay.framework.Sprite;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import javax.swing.Timer;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.random.RandomGenerator;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 class Frog extends Sprite {
@@ -23,7 +25,7 @@ class Frog extends Sprite {
     }
 
     public Rectangle bounds() {
-        return new Rectangle((int) x, (int) y, DIAMETER, DIAMETER);
+        return new Rectangle((int) x, (int) y, DIAMETER - 1, DIAMETER - 1);
     }
 
     @Override
@@ -56,38 +58,78 @@ class Frog extends Sprite {
 }
 
 class Road extends Sprite {
+    private final Car[] line1 = new Car[6];
+    private final Car[] line2 = new Car[6];
+    private final Car[] line3 = new Car[6];
 
     public Road(Game game, int y) {
         super(game);
         this.x = 0;
         this.y = y;
+        for (int i = 0; i < line1.length; i++) {
+            line1[i] = new Car(game, i * Car.LENGTH * 2, y, 5, 0);
+        }
+        for (int i = 0; i < line2.length; i++) {
+            line2[i] = new Car(game, Car.LENGTH / 2  + i * Car.LENGTH * 2, y + Car.HEIGHT, -6, 0);
+        }
+        for (int i = 0; i < line3.length; i++) {
+            line3[i] = new Car(game, Car.LENGTH / 4  + i * Car.LENGTH * 3, y + Car.HEIGHT * 2, 7, 0);
+        }
+    }
+
+    @Override
+    public Rectangle bounds() {
+        return new Rectangle((int) x, (int) y, game.screenWidth(), Frog.DIAMETER * 3);
     }
 
     @Override
     public void draw(Graphics g) {
         g.setColor(Color.GRAY);
         g.fillRect((int) x, (int) y, game.screenWidth(), Frog.DIAMETER * 3);
+        Arrays.stream(line1).forEach(c -> c.draw(g));
+        Arrays.stream(line2).forEach(c -> c.draw(g));
+        Arrays.stream(line3).forEach(c -> c.draw(g));
+    }
+
+    @Override
+    public void move() {
+        super.move();
+        Arrays.stream(line1).forEach(Car::move);
+        Arrays.stream(line2).forEach(Car::move);
+        Arrays.stream(line3).forEach(Car::move);
+    }
+
+    @Override
+    public boolean touch(Sprite frog) {
+        if (!bounds().intersects(frog.bounds())) {
+            return false;
+        }
+        return Stream.of(line1).map(Car::bounds).anyMatch(frog.bounds()::intersects)
+                || Stream.of(line2).map(Car::bounds).anyMatch(frog.bounds()::intersects)
+                || Stream.of(line3).map(Car::bounds).anyMatch(frog.bounds()::intersects);
     }
 }
 
 class Car extends Sprite {
     public static final int LENGTH = Frog.DIAMETER * 2;
-    protected Car(Game game, int x, int y) {
+    public static final int HEIGHT = Frog.DIAMETER;
+
+    protected Car(Game game, int x, int y, int vx, int vy) {
         super(game);
         this.x = x;
         this.y = y;
-        this.vy = 0;
-        this.vx = 15;
+        this.vx = vx;
+        this.vy = vy;
     }
 
     public Rectangle bounds() {
-        return new Rectangle((int) x, (int) y, LENGTH, LENGTH);
+        return new Rectangle((int) x, (int) y, LENGTH, Frog.DIAMETER - 2);
     }
 
     @Override
     public void draw(Graphics g) {
         g.setColor(Color.BLACK);
-        g.fillRect((int) x, (int) y, LENGTH, Frog.DIAMETER);
+        g.fillRect((int) x, (int) y, LENGTH, Frog.DIAMETER - 2);
     }
 
     @Override
@@ -95,6 +137,171 @@ class Car extends Sprite {
         super.move();
         if (x > game.screenWidth()) {
             x = - LENGTH;
+        }
+        else if (x < - LENGTH) {
+            x = game.screenWidth();
+        }
+    }
+}
+
+class Railroad extends Sprite {
+    private static final Color BROWN = new Color(255, 255, 173);
+    private final Train train;
+
+    protected Railroad(Game game, int y, int vx) {
+        super(game);
+        this.y = y;
+        train = new Train(game, -Train.LENGTH, y, vx, 0);
+    }
+
+    @Override
+    public Rectangle bounds() {
+        return new Rectangle((int) x, (int) y, game.screenWidth(), Frog.DIAMETER);
+    }
+
+    @Override
+    public void draw(Graphics g) {
+        g.setColor(BROWN);
+        g.fillRect(0, (int) y, game.screenWidth(), Frog.DIAMETER);
+        g.setColor(Color.DARK_GRAY);
+        g.drawLine(0, (int) y + Frog.DIAMETER / 3, game.screenWidth(), (int) y + Frog.DIAMETER / 3);
+        g.drawLine(0, (int) y + 2 * Frog.DIAMETER / 3, game.screenWidth(), (int) y + 2 * Frog.DIAMETER / 3);
+        train.draw(g);
+    }
+
+    @Override
+    public void move() {
+        super.move();
+        train.move();
+    }
+
+    @Override
+    public boolean touch(Sprite frog) {
+        if (!bounds().intersects(frog.bounds())) {
+            return false;
+        }
+        return train.bounds().intersects(frog.bounds());
+    }
+}
+
+class Train extends Sprite {
+    public static final int LENGTH = Frog.DIAMETER * 4;
+    public static final int HEIGHT = Frog.DIAMETER;
+
+    protected Train(Game game, int x, int y, int vx, int vy) {
+        super(game);
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+    }
+
+    public Rectangle bounds() {
+        return new Rectangle((int) x, (int) y, LENGTH, HEIGHT);
+    }
+
+    @Override
+    public void draw(Graphics g) {
+        g.setColor(Color.BLACK);
+        g.fillRect((int) x, (int) y, LENGTH, HEIGHT);
+    }
+
+    @Override
+    public void move() {
+        super.move();
+        if (x > game.screenWidth()) {
+            x = - LENGTH;
+        }
+        else if (x < - LENGTH) {
+            x = game.screenWidth();
+        }
+    }
+}
+
+class River extends Sprite {
+    private final Trunk[] line1 = new Trunk[6];
+    private final Trunk[] line2 = new Trunk[6];
+    private final Trunk[] line3 = new Trunk[6];
+
+    public River(Game game, int y) {
+        super(game);
+        this.x = 0;
+        this.y = y;
+        for (int i = 0; i < line1.length; i++) {
+            line1[i] = new Trunk(game, i * Car.LENGTH * 2, y, 5, 0);
+        }
+        for (int i = 0; i < line2.length; i++) {
+            line2[i] = new Trunk(game, Car.LENGTH / 2  + i * Car.LENGTH * 2, y + Car.HEIGHT, -6, 0);
+        }
+        for (int i = 0; i < line3.length; i++) {
+            line3[i] = new Trunk(game, Car.LENGTH / 4  + i * Car.LENGTH * 3, y + Car.HEIGHT * 2, 7, 0);
+        }
+    }
+
+    @Override
+    public Rectangle bounds() {
+        return new Rectangle((int) x, (int) y, game.screenWidth(), Frog.DIAMETER * 3);
+    }
+
+    @Override
+    public void draw(Graphics g) {
+        g.setColor(Color.BLUE);
+        g.fillRect((int) x, (int) y, game.screenWidth(), Frog.DIAMETER * 3);
+        Arrays.stream(line1).forEach(c -> c.draw(g));
+        Arrays.stream(line2).forEach(c -> c.draw(g));
+        Arrays.stream(line3).forEach(c -> c.draw(g));
+    }
+
+    @Override
+    public void move() {
+        super.move();
+        Arrays.stream(line1).forEach(Trunk::move);
+        Arrays.stream(line2).forEach(Trunk::move);
+        Arrays.stream(line3).forEach(Trunk::move);
+    }
+
+    @Override
+    public boolean touch(Sprite frog) {
+        if (!bounds().intersects(frog.bounds())) {
+            return false;
+        }
+        return Stream.of(line1).map(Trunk::bounds).anyMatch(Predicate.not(frog.bounds()::intersects))
+                && Stream.of(line2).map(Trunk::bounds).anyMatch(Predicate.not(frog.bounds()::intersects))
+                && Stream.of(line3).map(Trunk::bounds).anyMatch(Predicate.not(frog.bounds()::intersects));
+    }
+}
+
+class Trunk extends Sprite {
+    private static final Color BROWN = new Color(255, 173, 173);
+    public static final int LENGTH = Frog.DIAMETER * 3;
+    public static final int HEIGHT = Frog.DIAMETER;
+
+    protected Trunk(Game game, int x, int y, int vx, int vy) {
+        super(game);
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+    }
+
+    public Rectangle bounds() {
+        return new Rectangle((int) x, (int) y, LENGTH, Frog.DIAMETER - 2);
+    }
+
+    @Override
+    public void draw(Graphics g) {
+        g.setColor(BROWN);
+        g.fillRect((int) x, (int) y, LENGTH, Frog.DIAMETER - 2);
+    }
+
+    @Override
+    public void move() {
+        super.move();
+        if (x > game.screenWidth()) {
+            x = - LENGTH;
+        }
+        else if (x < - LENGTH) {
+            x = game.screenWidth();
         }
     }
 }
@@ -107,8 +314,12 @@ public class Frogger extends Game {
     }
 
     private final Frog frog = new Frog(this);
-    private final Road road = new Road(this, screenHeight() - Frog.DIAMETER * 5);
-    private final Car[] cars = new Car[3];
+    private final List<Sprite> obstacles = List.of(
+            new Road(this, screenHeight() - Frog.DIAMETER * 5),
+            new Railroad(this, screenHeight() - Frog.DIAMETER * 2, 30),
+            new Railroad(this, screenHeight() - Frog.DIAMETER, 10),
+            new River(this, Frog.DIAMETER * 2)
+    );
 
     @Override
     public int screenHeight() {
@@ -117,35 +328,30 @@ public class Frogger extends Game {
 
     @Override
     public int screenWidth() {
-        return 1000;
+        return 1200;
     }
 
     @Override
     protected void play(BufferStrategy bufferStrategy) {
 
         new Timer(100, e -> {
-            for (Car car : cars) {
-                car.move();
-            }
-
-            if(checkCollision()) {
-                initFrog();
-            }
+            obstacles.forEach(Sprite::move);
 
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
 
             try {
                 fondEcran(g, Color.GREEN);
-                road.draw(g);
+                obstacles.forEach(s -> s.draw(g));
                 frog.draw(g);
-                for (Car car : cars) {
-                    car.draw(g);
-                }
             } finally {
                 g.dispose();
             }
 
             bufferStrategy.show();
+
+            if(checkCollision()) {
+                initFrog();
+            }
         }).start();
     }
 
@@ -158,8 +364,8 @@ public class Frogger extends Game {
                 switch (e.getKeyCode()) {
                     case KeyEvent.VK_UP -> frog.y(frog.y() - Frog.DIAMETER);
                     case KeyEvent.VK_DOWN -> frog.y(frog.y() + Frog.DIAMETER);
-//                    case KeyEvent.VK_LEFT -> frog.x(frog.x() - Frog.DIAMETER);
-//                    case KeyEvent.VK_RIGHT -> frog.x(frog.x() + Frog.DIAMETER);
+                    case KeyEvent.VK_LEFT -> frog.x(frog.x() - Frog.DIAMETER);
+                    case KeyEvent.VK_RIGHT -> frog.x(frog.x() + Frog.DIAMETER);
                 }
             }
 
@@ -172,19 +378,11 @@ public class Frogger extends Game {
         });
 
         initFrog();
-        initCars();
     }
 
     private void initFrog() {
         frog.x(screenWidth() / 2);
         frog.y(screenHeight() - Frog.DIAMETER);
-    }
-
-    private void initCars() {
-        for (int i = 0; i < cars.length; i++) {
-            Car car = new Car(this, -(2 * Car.LENGTH) * i, screenHeight() - Frog.DIAMETER * (i + 3));
-            cars[i] = car;
-        }
     }
 
     @Override
@@ -198,8 +396,6 @@ public class Frogger extends Game {
     }
 
     boolean checkCollision() {
-        return Stream.of(cars)
-                .map(Car::bounds)
-                .anyMatch(frog.bounds()::intersects);
+        return obstacles.stream().anyMatch(o -> o.touch(frog));
     }
 }

@@ -1,6 +1,6 @@
 package pro.tremblay.framework;
 
-import java.awt.Graphics;
+import java.awt.*;
 import java.util.StringJoiner;
 
 public abstract class Sprite {
@@ -74,4 +74,12 @@ public abstract class Sprite {
     }
 
     public abstract void draw(Graphics g);
+
+    public Rectangle bounds() {
+        return new Rectangle((int) x, (int) y, (int) 0, (int) 0);
+    }
+
+    public boolean touch(Sprite sprite) {
+        return false;
+    }
 }
