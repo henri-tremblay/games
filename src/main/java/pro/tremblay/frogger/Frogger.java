@@ -5,22 +5,23 @@ import pro.tremblay.framework.Sprite;
 
 import javax.swing.JFrame;
 import javax.swing.Timer;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Optional;
 import java.util.stream.Stream;
 
-class Frog extends Sprite {
+interface HasSpeed {
+    void setSpeed();
+}
+
+class Frog extends Sprite<Frogger> {
     static final int DIAMETER = 50;
 
-    public Frog(Game game) {
+    public Frog(Frogger game) {
         super(game);
     }
 
@@ -33,47 +34,42 @@ class Frog extends Sprite {
         g.setColor(Color.RED);
         g.fillOval((int) x, (int) y, DIAMETER, DIAMETER);
     }
-
-    @Override
-    public Sprite x(double x) {
-        if (x + DIAMETER > game.screenWidth()) {
-            x = game.screenWidth() - DIAMETER;
-        } else if (x - DIAMETER < 0) {
-            x = DIAMETER;
-        }
-
-        return super.x(x);
-    }
-
-    @Override
-    public Sprite y(double y) {
-        if (y + DIAMETER > game.screenHeight()) {
-            y = game.screenHeight() - DIAMETER;
-        } else if (y - DIAMETER < 0) {
-            y = DIAMETER;
-        }
-
-        return super.y(y);
-    }
 }
 
-class Road extends Sprite {
+class Road extends Sprite<Frogger> implements HasSpeed {
+    private static final int LINE1_SPEED = 5;
+    private static final int LINE2_SPEED = -6;
+    private static final int LINE3_SPEED = 7;
+
     private final Car[] line1 = new Car[6];
     private final Car[] line2 = new Car[6];
     private final Car[] line3 = new Car[6];
 
-    public Road(Game game, int y) {
+    public Road(Frogger game, double y) {
         super(game);
         this.x = 0;
         this.y = y;
         for (int i = 0; i < line1.length; i++) {
-            line1[i] = new Car(game, i * Car.LENGTH * 2, y, 5, 0);
+            line1[i] = new Car(game, i * Car.LENGTH * 3, y, LINE1_SPEED, 0);
         }
         for (int i = 0; i < line2.length; i++) {
-            line2[i] = new Car(game, Car.LENGTH / 2  + i * Car.LENGTH * 2, y + Car.HEIGHT, -6, 0);
+            line2[i] = new Car(game, Car.LENGTH / 3.0  + i * Car.LENGTH * 2, y + Car.HEIGHT, LINE2_SPEED, 0);
         }
         for (int i = 0; i < line3.length; i++) {
-            line3[i] = new Car(game, Car.LENGTH / 4  + i * Car.LENGTH * 3, y + Car.HEIGHT * 2, 7, 0);
+            line3[i] = new Car(game, Car.LENGTH / 4.0  + i * Car.LENGTH * 3, y + Car.HEIGHT * 2, LINE3_SPEED, 0);
+        }
+    }
+
+    @Override
+    public void setSpeed() {
+        for (Car car : line1) {
+            car.vx(LINE1_SPEED * game.speedCoefficient());
+        }
+        for (Car car : line2) {
+            car.vx(LINE2_SPEED * game.speedCoefficient());
+        }
+        for (Car car : line3) {
+            car.vx(LINE3_SPEED * game.speedCoefficient());
         }
     }
 
@@ -100,7 +96,7 @@ class Road extends Sprite {
     }
 
     @Override
-    public boolean touch(Sprite frog) {
+    public boolean touch(Sprite<Frogger> frog) {
         if (!bounds().intersects(frog.bounds())) {
             return false;
         }
@@ -110,11 +106,11 @@ class Road extends Sprite {
     }
 }
 
-class Car extends Sprite {
+class Car extends Sprite<Frogger> {
     public static final int LENGTH = Frog.DIAMETER * 2;
     public static final int HEIGHT = Frog.DIAMETER;
 
-    protected Car(Game game, int x, int y, int vx, int vy) {
+    protected Car(Frogger game, double x, double y, double vx, double vy) {
         super(game);
         this.x = x;
         this.y = y;
@@ -144,13 +140,15 @@ class Car extends Sprite {
     }
 }
 
-class Railroad extends Sprite {
+class Railroad extends Sprite<Frogger> implements HasSpeed {
     private static final Color BROWN = new Color(255, 255, 173);
     private final Train train;
+    private final double initialTrainSpeed;
 
-    protected Railroad(Game game, int y, int vx) {
+    protected Railroad(Frogger game, double y, double vx) {
         super(game);
         this.y = y;
+        this.initialTrainSpeed = vx;
         train = new Train(game, -Train.LENGTH, y, vx, 0);
     }
 
@@ -176,7 +174,12 @@ class Railroad extends Sprite {
     }
 
     @Override
-    public boolean touch(Sprite frog) {
+    public void setSpeed() {
+        train.vx(initialTrainSpeed * game.speedCoefficient());
+    }
+
+    @Override
+    public boolean touch(Sprite<Frogger> frog) {
         if (!bounds().intersects(frog.bounds())) {
             return false;
         }
@@ -184,11 +187,11 @@ class Railroad extends Sprite {
     }
 }
 
-class Train extends Sprite {
+class Train extends Sprite<Frogger> {
     public static final int LENGTH = Frog.DIAMETER * 4;
     public static final int HEIGHT = Frog.DIAMETER;
 
-    protected Train(Game game, int x, int y, int vx, int vy) {
+    protected Train(Frogger game, double x, double y, double vx, double vy) {
         super(game);
         this.x = x;
         this.y = y;
@@ -218,23 +221,28 @@ class Train extends Sprite {
     }
 }
 
-class River extends Sprite {
+class River extends Sprite<Frogger> implements HasSpeed {
+    private static final int LINE1_SPEED = 5;
+    private static final int LINE2_SPEED = -6;
+    private static final int LINE3_SPEED = 7;
+
+    private boolean inTheRiver = false;
     private final Trunk[] line1 = new Trunk[6];
     private final Trunk[] line2 = new Trunk[6];
     private final Trunk[] line3 = new Trunk[6];
 
-    public River(Game game, int y) {
+    public River(Frogger game, double y) {
         super(game);
         this.x = 0;
         this.y = y;
         for (int i = 0; i < line1.length; i++) {
-            line1[i] = new Trunk(game, i * Car.LENGTH * 2, y, 5, 0);
+            line1[i] = new Trunk(game, i * Car.LENGTH * 2, y, LINE1_SPEED, 0);
         }
         for (int i = 0; i < line2.length; i++) {
-            line2[i] = new Trunk(game, Car.LENGTH / 2  + i * Car.LENGTH * 2, y + Car.HEIGHT, -6, 0);
+            line2[i] = new Trunk(game, Car.LENGTH / 2.0  + i * Car.LENGTH * 2, y + Car.HEIGHT, LINE2_SPEED, 0);
         }
         for (int i = 0; i < line3.length; i++) {
-            line3[i] = new Trunk(game, Car.LENGTH / 4  + i * Car.LENGTH * 3, y + Car.HEIGHT * 2, 7, 0);
+            line3[i] = new Trunk(game, Car.LENGTH / 4.0  + i * Car.LENGTH * 3, y + Car.HEIGHT * 2, LINE3_SPEED, 0);
         }
     }
 
@@ -261,22 +269,58 @@ class River extends Sprite {
     }
 
     @Override
-    public boolean touch(Sprite frog) {
+    public void setSpeed() {
+        for (Trunk trunk : line1) {
+            trunk.vx(LINE1_SPEED * game.speedCoefficient());
+        }
+        for (Trunk trunk : line2) {
+            trunk.vx(LINE2_SPEED * game.speedCoefficient());
+        }
+        for (Trunk trunk : line3) {
+            trunk.vx(LINE3_SPEED * game.speedCoefficient());
+        }
+    }
+
+    @Override
+    public boolean touch(Sprite<Frogger> frog) {
         if (!bounds().intersects(frog.bounds())) {
+            if (inTheRiver) {
+                inTheRiver = false;
+                frog.vx(0);
+            }
             return false;
         }
-        return Stream.of(line1).map(Trunk::bounds).anyMatch(Predicate.not(frog.bounds()::intersects))
-                && Stream.of(line2).map(Trunk::bounds).anyMatch(Predicate.not(frog.bounds()::intersects))
-                && Stream.of(line3).map(Trunk::bounds).anyMatch(Predicate.not(frog.bounds()::intersects));
+        inTheRiver = true;
+        if (touchTrunk(frog, line1)) {
+            return false;
+        }
+        if (touchTrunk(frog, line2)) {
+            return false;
+        }
+        if (touchTrunk(frog, line3)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean touchTrunk(Sprite<Frogger> frog, Trunk[] line) {
+        Optional<Trunk> trunkOptional = Stream.of(line)
+                .filter(trunk -> trunk.bounds().contains(frog.bounds()))
+                .findFirst();
+        if (trunkOptional.isPresent()) {
+            frog.vx(trunkOptional.get().vx());
+            return true;
+        }
+        return false;
     }
 }
 
-class Trunk extends Sprite {
-    private static final Color BROWN = new Color(255, 173, 173);
+class Trunk extends Sprite<Frogger> {
+    private static final Color BROWN = new Color(0X62, 0x2A, 0x0F);
     public static final int LENGTH = Frog.DIAMETER * 3;
     public static final int HEIGHT = Frog.DIAMETER;
 
-    protected Trunk(Game game, int x, int y, int vx, int vy) {
+    protected Trunk(Frogger game, double x, double y, double vx, double vy) {
         super(game);
         this.x = x;
         this.y = y;
@@ -285,13 +329,13 @@ class Trunk extends Sprite {
     }
 
     public Rectangle bounds() {
-        return new Rectangle((int) x, (int) y, LENGTH, Frog.DIAMETER - 2);
+        return new Rectangle((int) x, (int) y, LENGTH, HEIGHT);
     }
 
     @Override
     public void draw(Graphics g) {
         g.setColor(BROWN);
-        g.fillRect((int) x, (int) y, LENGTH, Frog.DIAMETER - 2);
+        g.fillRect((int) x, (int) y, LENGTH, HEIGHT);
     }
 
     @Override
@@ -306,6 +350,33 @@ class Trunk extends Sprite {
     }
 }
 
+class Victory extends Sprite<Frogger> {
+
+    protected Victory(Frogger game) {
+        super(game);
+    }
+
+    @Override
+    public Rectangle bounds() {
+        return new Rectangle(0, 0, game.screenWidth(), Frog.DIAMETER);
+    }
+
+    @Override
+    public void draw(Graphics g) {
+        for (int i = 0; i < game.screenWidth() / (Frog.DIAMETER * 2); i++) {
+            g.setColor(Color.WHITE);
+            g.fillRect(i * Frog.DIAMETER * 2, 0, Frog.DIAMETER, Frog.DIAMETER);
+            g.setColor(Color.BLACK);
+            g.fillRect(i * Frog.DIAMETER * 2 + Frog.DIAMETER, 0, Frog.DIAMETER, Frog.DIAMETER);
+        }
+    }
+
+    @Override
+    public boolean touch(Sprite<Frogger> sprite) {
+        return sprite.bounds().intersects(bounds());
+    }
+}
+
 public class Frogger extends Game {
 
     public static void main(String[] args) {
@@ -313,11 +384,13 @@ public class Frogger extends Game {
         app.start();
     }
 
+    private int level = 1;
     private final Frog frog = new Frog(this);
-    private final List<Sprite> obstacles = List.of(
+    private final Victory victory = new Victory(this);
+    private final List<Sprite<Frogger>> obstacles = List.of(
             new Road(this, screenHeight() - Frog.DIAMETER * 5),
             new Railroad(this, screenHeight() - Frog.DIAMETER * 2, 30),
-            new Railroad(this, screenHeight() - Frog.DIAMETER, 10),
+            new Railroad(this, 7 * Frog.DIAMETER, 10),
             new River(this, Frog.DIAMETER * 2)
     );
 
@@ -331,18 +404,25 @@ public class Frogger extends Game {
         return 1200;
     }
 
+    public double speedCoefficient() {
+        return 1 + 0.1 * level;
+    }
+
     @Override
     protected void play(BufferStrategy bufferStrategy) {
 
         new Timer(100, e -> {
+            frog.move();
             obstacles.forEach(Sprite::move);
 
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
 
             try {
                 fondEcran(g, Color.GREEN);
+                victory.draw(g);
                 obstacles.forEach(s -> s.draw(g));
                 frog.draw(g);
+                drawLevel(g);
             } finally {
                 g.dispose();
             }
@@ -351,8 +431,30 @@ public class Frogger extends Game {
 
             if(checkCollision()) {
                 initFrog();
+                return;
+            }
+
+            if (victory.touch(frog)) {
+                level++;
+                setSpeed();
+                initFrog();
             }
         }).start();
+    }
+
+    private void setSpeed() {
+        obstacles
+                .stream()
+                .map(o -> (HasSpeed) o)
+                .forEach(HasSpeed::setSpeed);
+    }
+
+    private void drawLevel(Graphics g) {
+        g.setColor(Color.BLACK);
+        g.fillRect(8, 10, 90, 30);
+        g.setColor(Color.YELLOW);
+        g.setFont(new Font("TimesRoman", Font.PLAIN, 20));
+        g.drawString("Level: " + level, 10, 30);
     }
 
     @Override
@@ -381,7 +483,7 @@ public class Frogger extends Game {
     }
 
     private void initFrog() {
-        frog.x(screenWidth() / 2);
+        frog.x(screenWidth() / 2.0);
         frog.y(screenHeight() - Frog.DIAMETER);
     }
 
@@ -390,12 +492,10 @@ public class Frogger extends Game {
         return "Frogger Édouard";
     }
 
-    private void fondEcran(Graphics g, Color color) {
-        g.setColor(color);
-        g.fillRect(0, 0, screenWidth(), screenHeight());
-    }
-
     boolean checkCollision() {
+        if (!bounds().contains(frog.bounds())) {
+            return true;
+        }
         return obstacles.stream().anyMatch(o -> o.touch(frog));
     }
 }

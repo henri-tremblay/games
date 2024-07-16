@@ -20,12 +20,12 @@ import java.util.random.RandomGenerator;
 // Écrire le pointage xxx
 // Utiliser un tampon d'affichage xxx
 
-class Pad extends Sprite {
+class Pad extends Sprite<Pong> {
     static final int WIDTH = 30;
     static final int HEIGHT = 150;
     static final int INITIAL_SPEED = 15;
 
-    public Pad(Game game) {
+    public Pad(Pong game) {
         super(game);
     }
 
@@ -48,10 +48,10 @@ class Pad extends Sprite {
 
 }
 
-class Ball extends Sprite {
+class Ball extends Sprite<Pong> {
     static final int DIAMETER = 50;
 
-    public Ball(Game game) {
+    public Ball(Pong game) {
         super(game);
     }
 
@@ -74,10 +74,10 @@ class Ball extends Sprite {
     }
 }
 
-class Score extends Sprite {
+class Score extends Sprite<Pong> {
     int left, right;
 
-    public Score(Game game) {
+    public Score(Pong game) {
         super(game);
     }
 
@@ -213,15 +213,10 @@ public class Pong extends Game {
         g.drawLine(screenWidth() / 2, 0, screenWidth() / 2, screenHeight());
     }
 
-    private void fondEcran(Graphics g, Color color) {
-        g.setColor(color);
-        g.fillRect(0, 0, screenWidth(), screenHeight());
-    }
-
     private void initBall() {
         ballSpeed = 15;
         double angle = findGoodAngle();
-        ball.position((screenWidth() - Ball.DIAMETER) / 2, (screenHeight() - Ball.DIAMETER) / 2);
+        ball.position((screenWidth() - Ball.DIAMETER) / 2.0, (screenHeight() - Ball.DIAMETER) / 2.0);
         double ballvx = (Math.cos(angle) * ballSpeed);
         double ballvy = (Math.sin(angle) * ballSpeed);
         ball.speed(ballvx, ballvy);
@@ -251,6 +246,6 @@ public class Pong extends Game {
     }
 
     private void initScore() {
-        score.position(screenWidth() / 2 - 15, 40);
+        score.position(screenWidth() / 2.0 - 15, 40);
     }
 }

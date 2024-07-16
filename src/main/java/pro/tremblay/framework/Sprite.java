@@ -3,12 +3,12 @@ package pro.tremblay.framework;
 import java.awt.*;
 import java.util.StringJoiner;
 
-public abstract class Sprite {
-    protected final Game game;
+public abstract class Sprite<T extends Game> {
+    protected final T game;
     protected double x, y;
     protected double vx, vy;
 
-    protected Sprite(Game game) {
+    protected Sprite(T game) {
         this.game = game;
     }
 
@@ -43,22 +43,22 @@ public abstract class Sprite {
         return y;
     }
 
-    public Sprite vx(double vx) {
+    public Sprite<T> vx(double vx) {
         this.vx = vx;
         return this;
     }
 
-    public Sprite vy(double vy) {
+    public Sprite<T> vy(double vy) {
         this.vy = vy;
         return this;
     }
 
-    public Sprite x(double x) {
+    public Sprite<T> x(double x) {
         this.x = x;
         return this;
     }
 
-    public Sprite y(double y) {
+    public Sprite<T> y(double y) {
         this.y = y;
         return this;
     }
@@ -76,10 +76,10 @@ public abstract class Sprite {
     public abstract void draw(Graphics g);
 
     public Rectangle bounds() {
-        return new Rectangle((int) x, (int) y, (int) 0, (int) 0);
+        return new Rectangle((int) x, (int) y, 0, 0);
     }
 
-    public boolean touch(Sprite sprite) {
+    public boolean touch(Sprite<T> sprite) {
         return false;
     }
 }

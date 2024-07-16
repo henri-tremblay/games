@@ -14,6 +14,10 @@ public abstract class Game {
         return 768;
     }
 
+    public Rectangle bounds() {
+        return new Rectangle(0, 0, screenWidth(), screenHeight());
+    }
+
     public void start() {
 
         JFrame frame = new JFrame(frameTitle());
@@ -38,4 +42,9 @@ public abstract class Game {
     protected abstract void play(BufferStrategy bufferStrategy);
 
     protected abstract void init(JFrame frame);
+
+    protected void fondEcran(Graphics g, Color color) {
+        g.setColor(color);
+        g.fillRect(0, 0, screenWidth(), screenHeight());
+    }
 }
