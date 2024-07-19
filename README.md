@@ -1,4 +1,4 @@
-Little Java games I'm doing with my son.
+Little Java games I'm doing with my sons.
 
 # Pong
 
