@@ -17,8 +17,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferStrategy;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
 
@@ -165,6 +165,8 @@ class Score extends Sprite<Snake> {
 
 public class Snake extends Game {
 
+    private static final RandomGenerator RANDOM = RandomGenerator.getDefault();
+
     public static void main(String[] args) {
         Snake app = new Snake();
         app.start();
@@ -172,7 +174,7 @@ public class Snake extends Game {
 
     private final SnakeSprite snake = new SnakeSprite(this);
     private final Score score = new Score(this, snake);
-    private final List<Ball> balls = new ArrayList<>();
+    private final List<Ball> balls = new CopyOnWriteArrayList<>();
 
     @Override
     protected void play(BufferStrategy bufferStrategy) {
@@ -212,9 +214,19 @@ public class Snake extends Game {
             if (ball.touch(snake)) {
                 balls.remove(i);
                 snake.addRing();
+                addBallIn5seconds();
                 break;
             }
         }
+    }
+
+    private void addBallIn5seconds() {
+        Timer timer = new Timer(5_000, e -> {
+            Ball ball = findFreeSpot();
+            balls.add(ball);
+        });
+        timer.setRepeats(false);
+        timer.start();
     }
 
     @Override
@@ -257,15 +269,20 @@ public class Snake extends Game {
     }
 
     private void initBalls() {
-        RandomGenerator random = RandomGenerator.getDefault();
         for (int i = 0; i < 20; i++) {
-            int x = random.nextInt((int) SnakeSprite.DIAMETER / 2, screenWidth() - (int) SnakeSprite.DIAMETER / 2);
-            int y = random.nextInt((int) SnakeSprite.DIAMETER / 2, screenHeight() - (int) SnakeSprite.DIAMETER / 2);
-            Ball ball = new Ball(this);
-            ball.position(x, y);
+            Ball ball = findFreeSpot();
             balls.add(ball);
         }
     }
+
+    private Ball findFreeSpot() {
+        int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenWidth() - (int) SnakeSprite.DIAMETER / 2);
+        int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenHeight() - (int) SnakeSprite.DIAMETER / 2);
+        Ball ball = new Ball(this);
+        ball.position(x, y);
+        return ball;
+    }
+
 
     @Override
     protected String frameTitle() {
