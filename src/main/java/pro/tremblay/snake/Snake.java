@@ -1,5 +1,6 @@
 package pro.tremblay.snake;
 
+import pro.tremblay.framework.CircularQueue;
 import pro.tremblay.framework.Game;
 import pro.tremblay.framework.Sprite;
 
@@ -14,32 +15,51 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
 
 class SnakeSprite extends Sprite<Snake> {
     static final double DIAMETER = 50;
-    static final double INITIAL_SPEED = 10;
-    static final double BOOST_SPEED = 15;
+    static final double INITIAL_SPEED = 15;
+    static final double BOOST_SPEED = 20;
 
     private boolean boosted = false;
+    private int length = 0;
+    private final CircularQueue<Point2D.Double> positions = new CircularQueue<>(100);
 
     public SnakeSprite(Snake game) {
         super(game);
     }
 
+    public int length() {
+        return length;
+    }
+
+    public boolean boosted() {
+        return boosted;
+    }
+
     @Override
     public void move() {
         super.move();
+
         if (y < 0) {
             y  = 0;
-            vy = -vy;
         } else if (y + DIAMETER > game.screenHeight()) {
             y = game.screenHeight() - DIAMETER;
-            vy = -vy;
         }
+
+        if (x < 0) {
+            x  = 0;
+        } else if (x + DIAMETER > game.screenWidth()) {
+            x = game.screenWidth() - DIAMETER;
+        }
+
+        positions.add(new Point2D.Double(x, y));
     }
 
     @Override
@@ -47,6 +67,8 @@ class SnakeSprite extends Sprite<Snake> {
         g.setColor(Color.YELLOW);
         // Draw face circle
         g.fillOval((int) x, (int) y, (int) DIAMETER, (int) DIAMETER);
+
+        positions.getFirsts(length).forEach(p -> g.fillOval((int) p.x, (int) p.y, (int) DIAMETER, (int) DIAMETER));
 
         g.setColor(Color.BLACK);
         // Draw eyes
@@ -68,20 +90,35 @@ class SnakeSprite extends Sprite<Snake> {
     }
 
     public void boost() {
+        if (length == 0) {
+            return;
+        }
         vx = vx / INITIAL_SPEED * BOOST_SPEED;
         vy = vy / INITIAL_SPEED * BOOST_SPEED;
         boosted = true;
     }
 
     public void normal() {
+        if (!boosted) {
+            return;
+        }
         vx = vx / BOOST_SPEED * INITIAL_SPEED;
         vy = vy / BOOST_SPEED * INITIAL_SPEED;
         boosted = false;
     }
+
+    public void addRing() {
+        length++;
+    }
+
+    public void removeRing() {
+        if (length > 0) {
+            length--;
+        }
+    }
 }
 
 class Ball extends Sprite<Snake> {
-    private boolean touched = false;
 
     protected Ball(Snake game) {
         super(game);
@@ -89,7 +126,7 @@ class Ball extends Sprite<Snake> {
 
     @Override
     public void draw(Graphics g) {
-        g.setColor(touched ? Color.YELLOW : Color.RED);
+        g.setColor(Color.RED);
         // Draw face circle
         g.fillOval((int) x, (int) y, (int) SnakeSprite.DIAMETER / 2, (int) SnakeSprite.DIAMETER / 2);
     }
@@ -101,19 +138,16 @@ class Ball extends Sprite<Snake> {
         double ballX = x() + SnakeSprite.DIAMETER / 4;
         double ballY = y() + SnakeSprite.DIAMETER / 4;
         double distance = Math.sqrt((snakeX-ballX)*(snakeX-ballX) + (snakeY-ballY)*(snakeY-ballY));
-        boolean t = distance <= SnakeSprite.DIAMETER / 2 + SnakeSprite.DIAMETER / 4;
-        if (t) {
-            touched = true;
-        }
-        return t;
+        return distance <= SnakeSprite.DIAMETER / 2 + SnakeSprite.DIAMETER / 4;
     }
 }
 
 class Score extends Sprite<Snake> {
-    int length = 1;
+    private final SnakeSprite snake;
 
-    public Score(Snake game) {
+    public Score(Snake game, SnakeSprite snake) {
         super(game);
+        this.snake = snake;
     }
 
     @Override
@@ -125,7 +159,7 @@ class Score extends Sprite<Snake> {
 
         Graphics2D g2 = (Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.drawString("Longueur :" + length, (int) x, (int) y);
+        g.drawString("Longueur: " + snake.length(), (int) x, (int) y);
     }
 }
 
@@ -137,13 +171,21 @@ public class Snake extends Game {
     }
 
     private final SnakeSprite snake = new SnakeSprite(this);
-    private final Score score = new Score(this);
+    private final Score score = new Score(this, snake);
     private final List<Ball> balls = new ArrayList<>();
 
     @Override
     protected void play(BufferStrategy bufferStrategy) {
+        AtomicInteger boostTime = new AtomicInteger(0);
 
         new Timer(100, e -> {
+            if (snake.boosted()) {
+                int time = boostTime.incrementAndGet();
+                if (time > 10) {
+                    snake.removeRing();
+                    boostTime.set(0);
+                }
+            }
             snake.move();
 
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
@@ -158,9 +200,21 @@ public class Snake extends Game {
                 g.dispose();
             }
 
-            balls.forEach(b -> b.touch(snake));
+            swallowBall();
+            
             bufferStrategy.show();
         }).start();
+    }
+
+    private void swallowBall() {
+        for (int i = 0; i < balls.size(); i++) {
+            Ball ball = balls.get(i);
+            if (ball.touch(snake)) {
+                balls.remove(i);
+                snake.addRing();
+                break;
+            }
+        }
     }
 
     @Override
@@ -188,14 +242,14 @@ public class Snake extends Game {
             @Override
             public void keyPressed(KeyEvent e) {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_SPACE -> snake.boost();
+                    case KeyEvent.VK_UP -> snake.boost();
                 }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_SPACE -> snake.normal();
+                    case KeyEvent.VK_UP -> snake.normal();
                     case KeyEvent.VK_ESCAPE -> System.exit(0);
                 }
             }
@@ -204,9 +258,9 @@ public class Snake extends Game {
 
     private void initBalls() {
         RandomGenerator random = RandomGenerator.getDefault();
-        for (int i = 0; i < 10; i++) {
-            int x = random.nextInt(screenWidth());
-            int y = random.nextInt(screenHeight());
+        for (int i = 0; i < 20; i++) {
+            int x = random.nextInt((int) SnakeSprite.DIAMETER / 2, screenWidth() - (int) SnakeSprite.DIAMETER / 2);
+            int y = random.nextInt((int) SnakeSprite.DIAMETER / 2, screenHeight() - (int) SnakeSprite.DIAMETER / 2);
             Ball ball = new Ball(this);
             ball.position(x, y);
             balls.add(ball);
