@@ -17,6 +17,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferStrategy;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,13 +27,20 @@ class SnakeSprite extends Sprite<Snake> {
     static final double DIAMETER = 50;
     static final double INITIAL_SPEED = 15;
     static final double BOOST_SPEED = 20;
+    static final double ENEMY_SPEED = 5;
 
+    private boolean enemy = false;
     private boolean boosted = false;
     private int length = 0;
     private final CircularQueue<Point2D.Double> positions = new CircularQueue<>(100);
 
     public SnakeSprite(Snake game) {
         super(game);
+    }
+
+    public SnakeSprite(Snake game, boolean enemy) {
+        this(game);
+        this.enemy = enemy;
     }
 
     public int length() {
@@ -64,7 +72,7 @@ class SnakeSprite extends Sprite<Snake> {
 
     @Override
     public void draw(Graphics g) {
-        g.setColor(Color.YELLOW);
+        g.setColor(enemy ? Color.BLUE : Color.YELLOW);
         // Draw face circle
         g.fillOval((int) x, (int) y, (int) DIAMETER, (int) DIAMETER);
 
@@ -75,17 +83,21 @@ class SnakeSprite extends Sprite<Snake> {
         g.fillOval((int) (x + 10), (int) (y + 10), 10, 10);
         g.fillOval((int) (x + 30), (int) (y + 10), 10, 10);
         // Draw mouth
-        g.drawArc((int) (x + 10), (int) (y + 20), 30, 20, 180, 180);
+        if (enemy) {
+            g.drawLine((int) (x + 15), (int) (y + 30), (int) (x + 35), (int) (y + 30));
+        } else {
+            g.drawArc((int) (x + 10), (int) (y + 20), 30, 20, 180, 180);
+        }
     }
 
     public void setInitialSpeed() {
-        vx = 0; //INITIAL_SPEED;
+        vx = 0;
         vy = 0;
         boosted = false;
     }
 
     public void speed(double angle) {
-        double speed = boosted ? BOOST_SPEED : INITIAL_SPEED;
+        double speed = enemy ? ENEMY_SPEED : (boosted ? BOOST_SPEED : INITIAL_SPEED);
         speed(Math.cos(angle) * speed, Math.sin(angle) * speed);
     }
 
@@ -173,6 +185,7 @@ public class Snake extends Game {
     }
 
     private final SnakeSprite snake = new SnakeSprite(this);
+    private final List<SnakeSprite> enemies = new ArrayList<>();
     private final Score score = new Score(this, snake);
     private final List<Ball> balls = new CopyOnWriteArrayList<>();
 
@@ -189,6 +202,8 @@ public class Snake extends Game {
                 }
             }
             snake.move();
+            enemies.forEach(this::enemiesFollowSnake);
+            enemies.forEach(SnakeSprite::move);
 
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
 
@@ -197,6 +212,7 @@ public class Snake extends Game {
 
                 balls.forEach(b -> b.draw(g));
                 snake.draw(g);
+                enemies.forEach(enemy -> enemy.draw(g));
                 score.draw(g);
             } finally {
                 g.dispose();
@@ -208,6 +224,17 @@ public class Snake extends Game {
         }).start();
     }
 
+    private void enemiesFollowSnake(SnakeSprite enemy) {
+        double enemyX = enemy.x();
+        double enemyY = enemy.y();
+        double x = snake.x();
+        double y = snake.y();
+        double lengthX = x - enemyX;
+        double lengthY = y - enemyY;
+        double angle = Math.atan2(lengthY, lengthX);
+        enemy.speed(angle);
+    }
+
     private void swallowBall() {
         for (int i = 0; i < balls.size(); i++) {
             Ball ball = balls.get(i);
@@ -215,7 +242,18 @@ public class Snake extends Game {
                 balls.remove(i);
                 snake.addRing();
                 addBallIn5seconds();
+                if (snake.length() % 5 == 0) {
+                    SnakeSprite enemy = createEnemy();
+                    enemies.add(enemy);
+                }
                 break;
+            }
+            for (SnakeSprite enemy : enemies) {
+                if (ball.touch(enemy)) {
+                    balls.remove(i);
+                    enemy.addRing();
+                    break;
+                }
             }
         }
     }
@@ -263,6 +301,10 @@ public class Snake extends Game {
                 switch (e.getKeyCode()) {
                     case KeyEvent.VK_UP -> snake.normal();
                     case KeyEvent.VK_ESCAPE -> System.exit(0);
+                    case KeyEvent.VK_M -> {
+                        enemies.forEach(Snake.this::enemiesFollowSnake);
+                        enemies.forEach(SnakeSprite::move);
+                    }
                 }
             }
         });
@@ -283,6 +325,14 @@ public class Snake extends Game {
         return ball;
     }
 
+    private SnakeSprite createEnemy() {
+        SnakeSprite enemy = new SnakeSprite(this, true);
+        int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenWidth() - (int) SnakeSprite.DIAMETER / 2);
+        int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenHeight() - (int) SnakeSprite.DIAMETER / 2);
+        enemy.position(x, y);
+        enemy.speed(5, 5);
+        return enemy;
+    }
 
     @Override
     protected String frameTitle() {
@@ -291,6 +341,7 @@ public class Snake extends Game {
 
     private void initSnake() {
         snake.position((screenWidth() - SnakeSprite.DIAMETER) / 2.0, (screenHeight() - SnakeSprite.DIAMETER) / 2.0);
+        snake.position(100, 100);
         snake.setInitialSpeed();
     }
 
