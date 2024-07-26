@@ -31,4 +31,8 @@ public class CircularQueue<T> {
     public int size() {
         return array.size();
     }
+
+    public void clear() {
+        array.clear();
+    }
 }
