@@ -2,6 +2,7 @@ package pro.tremblay.snake;
 
 import pro.tremblay.framework.CircularQueue;
 import pro.tremblay.framework.Game;
+import pro.tremblay.framework.Geometry;
 import pro.tremblay.framework.Sprite;
 
 import javax.swing.JFrame;
@@ -27,20 +28,28 @@ class SnakeSprite extends Sprite<Snake> {
     static final double DIAMETER = 50;
     static final double INITIAL_SPEED = 15;
     static final double BOOST_SPEED = 20;
-    static final double ENEMY_SPEED = 5;
+    static final double ENEMY_SPEED = 10;
 
-    private boolean enemy = false;
+    private final boolean enemy;
+    private Color color;
+
     private boolean boosted = false;
     private int length = 0;
     private final CircularQueue<Point2D.Double> positions = new CircularQueue<>(100);
 
     public SnakeSprite(Snake game) {
-        super(game);
+        this(game, false);
     }
 
     public SnakeSprite(Snake game, boolean enemy) {
-        this(game);
+        super(game);
         this.enemy = enemy;
+    }
+
+    @Override
+    public void speed(double vx, double vy) {
+        super.speed(vx, vy);
+        this.color = enemy ? enemyColor() : Color.YELLOW;
     }
 
     public int length() {
@@ -57,14 +66,18 @@ class SnakeSprite extends Sprite<Snake> {
 
         if (y < 0) {
             y  = 0;
+            vy = -vy;
         } else if (y + DIAMETER > game.screenHeight()) {
             y = game.screenHeight() - DIAMETER;
+            vy = -vy;
         }
 
         if (x < 0) {
             x  = 0;
+            vx = -vx;
         } else if (x + DIAMETER > game.screenWidth()) {
             x = game.screenWidth() - DIAMETER;
+            vx = -vx;
         }
 
         positions.add(new Point2D.Double(x, y));
@@ -72,7 +85,7 @@ class SnakeSprite extends Sprite<Snake> {
 
     @Override
     public void draw(Graphics g) {
-        g.setColor(enemy ? Color.BLUE : Color.YELLOW);
+        g.setColor(color);
         // Draw face circle
         g.fillOval((int) x, (int) y, (int) DIAMETER, (int) DIAMETER);
 
@@ -90,6 +103,18 @@ class SnakeSprite extends Sprite<Snake> {
         }
     }
 
+    private Color enemyColor() {
+        double speed = vx * vx + vy * vy;
+        if (speed > 81) {
+            return Color.GRAY;
+        } else if (speed > 49) {
+            return Color.RED;
+        } else if (speed > 25) {
+            return Color.ORANGE;
+        }
+        return Color.BLUE;
+    }
+
     public void setInitialSpeed() {
         vx = 0;
         vy = 0;
@@ -105,9 +130,11 @@ class SnakeSprite extends Sprite<Snake> {
         if (length == 0) {
             return;
         }
-        vx = vx / INITIAL_SPEED * BOOST_SPEED;
-        vy = vy / INITIAL_SPEED * BOOST_SPEED;
-        boosted = true;
+        if (!boosted) {
+            vx = vx / INITIAL_SPEED * BOOST_SPEED;
+            vy = vy / INITIAL_SPEED * BOOST_SPEED;
+            boosted = true;
+        }
     }
 
     public void normal() {
@@ -121,6 +148,9 @@ class SnakeSprite extends Sprite<Snake> {
 
     public void addRing() {
         length++;
+        if (positions.size() < length) {
+            positions.add(new Point2D.Double(x, y));
+        }
     }
 
     public void removeRing() {
@@ -128,6 +158,43 @@ class SnakeSprite extends Sprite<Snake> {
             length--;
         }
     }
+
+    public void clearRings() {
+        length = 0;
+    }
+
+    /**
+     * Check if an enemy touch the snake. "this" is the enemy
+     *
+     * @param snake the snake
+     * @return if touched
+     */
+    public boolean touch(SnakeSprite snake) {
+        // If any part of the enemy "This" touches the snake
+        double radius = SnakeSprite.DIAMETER / 2;
+        double x = snake.x() + radius;
+        double y = snake.y() + radius;
+
+        List<Point2D.Double> all = positions.getFirsts(length)
+                .toList();
+        for (Point2D.Double p : all) {
+            double px = p.x + radius;
+            double py = p.y + radius;
+            if (Geometry.circleIntersect(x, y, radius, px, py, radius)) {
+                Snake.snakeTouched = new Point2D.Double(snake.x(), snake.y());
+                Snake.enemyTouched = new Point2D.Double(p.x, p.y);
+                return true;
+            }
+        }
+        return false;
+
+//        return all.stream().anyMatch(p -> {
+//           double px = p.x + radius;
+//           double py = p.y + radius;
+//           return Geometry.circleIntersect(x, y, radius, px, py, radius);
+//        });
+    }
+
 }
 
 class Ball extends Sprite<Snake> {
@@ -149,8 +216,12 @@ class Ball extends Sprite<Snake> {
         double snakeY = sprite.y() + SnakeSprite.DIAMETER / 2;
         double ballX = x() + SnakeSprite.DIAMETER / 4;
         double ballY = y() + SnakeSprite.DIAMETER / 4;
-        double distance = Math.sqrt((snakeX-ballX)*(snakeX-ballX) + (snakeY-ballY)*(snakeY-ballY));
-        return distance <= SnakeSprite.DIAMETER / 2 + SnakeSprite.DIAMETER / 4;
+        double snakeR = SnakeSprite.DIAMETER / 2;
+        double ballR = SnakeSprite.DIAMETER / 4;
+        return Geometry.circleIntersect(
+                snakeX, snakeY, snakeR,
+                ballX, ballY, ballR
+        );
     }
 }
 
@@ -175,9 +246,32 @@ class Score extends Sprite<Snake> {
     }
 }
 
+class GameOver extends Sprite<Snake> {
+
+    public GameOver(Snake game) {
+        super(game);
+    }
+
+    @Override
+    public void draw(Graphics g) {
+        g.setColor(Color.YELLOW);
+        g.drawString("Appuyez sur Entrée pour rejouer", 280, 250);
+
+        Font currentFont = g.getFont();
+        Font newFont = currentFont.deriveFont(currentFont.getSize() * 5F);
+        g.setFont(newFont);
+
+        Graphics2D g2 = (Graphics2D)g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.drawString("Fin de la partie", 280, 200);
+    }
+}
+
 public class Snake extends Game {
 
     private static final RandomGenerator RANDOM = RandomGenerator.getDefault();
+    public static Point2D.Double snakeTouched;
+    public static Point2D.Double enemyTouched;
 
     public static void main(String[] args) {
         Snake app = new Snake();
@@ -188,6 +282,8 @@ public class Snake extends Game {
     private final List<SnakeSprite> enemies = new ArrayList<>();
     private final Score score = new Score(this, snake);
     private final List<Ball> balls = new CopyOnWriteArrayList<>();
+    private final GameOver gameOver = new GameOver(this);
+    private boolean touched = false;
 
     @Override
     protected void play(BufferStrategy bufferStrategy) {
@@ -201,9 +297,12 @@ public class Snake extends Game {
                     boostTime.set(0);
                 }
             }
-            snake.move();
-            enemies.forEach(this::enemiesFollowSnake);
-            enemies.forEach(SnakeSprite::move);
+
+            if (!touched) {
+                snake.move();
+//                enemies.forEach(this::enemiesFollowSnake);
+                enemies.forEach(SnakeSprite::move);
+            }
 
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
 
@@ -214,11 +313,18 @@ public class Snake extends Game {
                 snake.draw(g);
                 enemies.forEach(enemy -> enemy.draw(g));
                 score.draw(g);
+                if (touched) {
+                    gameOver.draw(g);
+                }
             } finally {
                 g.dispose();
             }
 
             swallowBall();
+
+            if (enemies.stream().anyMatch(enemy -> enemy.touch(snake))) {
+                touched = true;
+            }
             
             bufferStrategy.show();
         }).start();
@@ -239,9 +345,7 @@ public class Snake extends Game {
         for (int i = 0; i < balls.size(); i++) {
             Ball ball = balls.get(i);
             if (ball.touch(snake)) {
-                balls.remove(i);
-                snake.addRing();
-                addBallIn5seconds();
+                ballEaten(i, snake);
                 if (snake.length() % 5 == 0) {
                     SnakeSprite enemy = createEnemy();
                     enemies.add(enemy);
@@ -250,12 +354,17 @@ public class Snake extends Game {
             }
             for (SnakeSprite enemy : enemies) {
                 if (ball.touch(enemy)) {
-                    balls.remove(i);
-                    enemy.addRing();
+                    ballEaten(i, enemy);
                     break;
                 }
             }
         }
+    }
+
+    private void ballEaten(int index, SnakeSprite snake) {
+        balls.remove(index);
+        snake.addRing();
+        addBallIn5seconds();
     }
 
     private void addBallIn5seconds() {
@@ -269,9 +378,7 @@ public class Snake extends Game {
 
     @Override
     protected void init(JFrame frame) {
-        initSnake();
-        initBalls();
-        initScore();
+        init();
 
         frame.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
@@ -305,12 +412,30 @@ public class Snake extends Game {
                         enemies.forEach(Snake.this::enemiesFollowSnake);
                         enemies.forEach(SnakeSprite::move);
                     }
+                    case KeyEvent.VK_ENTER -> {
+                        if (touched) {
+                            init();
+                        }
+                    }
                 }
             }
         });
     }
 
+    private void init() {
+        initSnake();
+        initBalls();
+        initScore();
+        initEnemies();
+        touched = false;
+    }
+
+    private void initEnemies() {
+        enemies.clear();
+    }
+
     private void initBalls() {
+        balls.clear();
         for (int i = 0; i < 20; i++) {
             Ball ball = findFreeSpot();
             balls.add(ball);
@@ -330,8 +455,24 @@ public class Snake extends Game {
         int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenWidth() - (int) SnakeSprite.DIAMETER / 2);
         int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenHeight() - (int) SnakeSprite.DIAMETER / 2);
         enemy.position(x, y);
-        enemy.speed(5, 5);
+        int vx = gaussianSpeed();
+        int vy = gaussianSpeed();
+        enemy.speed(vx, vy);
+        for (int i = 0; i < 10; i++) {
+            enemy.addRing();
+        }
         return enemy;
+    }
+
+    private int gaussianSpeed() {
+        double speed = RANDOM.nextGaussian(5, 2);
+        if (speed < 3) {
+            speed = 3;
+        } else if (speed > 10) {
+            speed = 10;
+        }
+        int side = RANDOM.nextDouble() < 0.5 ? -1 : 1;
+        return side * (int) speed;
     }
 
     @Override
@@ -340,6 +481,7 @@ public class Snake extends Game {
     }
 
     private void initSnake() {
+        snake.clearRings();
         snake.position((screenWidth() - SnakeSprite.DIAMETER) / 2.0, (screenHeight() - SnakeSprite.DIAMETER) / 2.0);
         snake.position(100, 100);
         snake.setInitialSpeed();
