@@ -368,7 +368,7 @@ public class Snake extends Game {
     }
 
     private void addBallIn5seconds() {
-        Timer timer = new Timer(5_000, e -> {
+        Timer timer = new Timer(3_000, e -> {
             Ball ball = findFreeSpot();
             balls.add(ball);
         });
@@ -436,7 +436,7 @@ public class Snake extends Game {
 
     private void initBalls() {
         balls.clear();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 25; i++) {
             Ball ball = findFreeSpot();
             balls.add(ball);
         }
