@@ -292,7 +292,7 @@ public class Snake extends Game {
         new Timer(100, e -> {
             if (snake.boosted()) {
                 int time = boostTime.incrementAndGet();
-                if (time > 10) {
+                if (time > 8) {
                     snake.removeRing();
                     boostTime.set(0);
                 }
