@@ -399,15 +399,15 @@ public class Snake extends Game {
             @Override
             public void keyPressed(KeyEvent e) {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_UP -> snake.boost();
+                    case KeyEvent.VK_SHIFT -> snake.boost();
                 }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_UP -> snake.normal();
-                    case KeyEvent.VK_ESCAPE -> System.exit(0);
+                    case KeyEvent.VK_SHIFT -> snake.normal();
+                    case KeyEvent.VK_ESCAPE-> System.exit(0);
                     case KeyEvent.VK_M -> {
                         enemies.forEach(Snake.this::enemiesFollowSnake);
                         enemies.forEach(SnakeSprite::move);
