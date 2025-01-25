@@ -60,6 +60,11 @@ class SnakeSprite extends Sprite<Snake> {
         return boosted;
     }
 
+    public void follow(double x, double y) {
+        double angle = Geometry.angleBetween(x(), y(), x, y);
+        speed(angle);
+    }
+
     @Override
     public void move() {
         super.move();
@@ -195,6 +200,29 @@ class SnakeSprite extends Sprite<Snake> {
 //        });
     }
 
+    public void targetBall(List<Ball> balls) {
+        // no balls, just keep our current route
+        if (balls.isEmpty()) {
+            return;
+        }
+        double radius = SnakeSprite.DIAMETER / 2;
+        // center of the square
+        double x = x() + radius;
+        double y = y() + radius;
+
+        // find the closest ball
+        double minDistance = Double.MAX_VALUE;
+        Ball closest = null;
+        for (Ball ball : balls) {
+            double distance = ball.squareDistance(x, y);
+            if (distance < minDistance) {
+                closest = ball;
+                minDistance = distance;
+            }
+        }
+        closest.followed();
+        follow(closest.x(), closest.y());
+    }
 }
 
 class Ball extends Sprite<Snake> {
@@ -208,6 +236,10 @@ class Ball extends Sprite<Snake> {
         g.setColor(Color.RED);
         // Draw face circle
         g.fillOval((int) x, (int) y, (int) SnakeSprite.DIAMETER / 2, (int) SnakeSprite.DIAMETER / 2);
+    }
+
+    public double squareDistance(double x, double y) {
+        return Geometry.squareDistance (x, y, this.x, this.y);
     }
 
     @Override
@@ -297,6 +329,8 @@ public class Snake extends Game {
                     boostTime.set(0);
                 }
             }
+
+            enemies.forEach(enemy -> enemy.targetBall(balls));
 
             if (!touched) {
                 snake.move();
