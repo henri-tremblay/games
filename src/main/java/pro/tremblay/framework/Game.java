@@ -21,7 +21,6 @@ public abstract class Game {
     public void start() {
 
         JFrame frame = new JFrame(frameTitle());
-        frame.setBounds(0, 0, screenWidth(), screenHeight());
         frame.setSize(new Dimension(screenWidth(), screenHeight()));
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
