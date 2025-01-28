@@ -10,7 +10,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,16 +20,14 @@ import java.util.random.RandomGenerator;
 public class Snake extends Game {
 
     private static final RandomGenerator RANDOM = RandomGenerator.getDefault();
-    public static Point2D.Double snakeTouched;
-    public static Point2D.Double enemyTouched;
 
     public static void main(String[] args) {
         Snake app = new Snake();
         app.start();
     }
 
-    private final SnakeSprite snake = new SnakeSprite(this);
-    private final List<SnakeSprite> enemies = new ArrayList<>();
+    private final PlayerSnake snake = new PlayerSnake(this);
+    private final List<EnemySnake> enemies = new ArrayList<>();
     private final Score score = new Score(this, snake);
     private final List<Ball> balls = new CopyOnWriteArrayList<>();
     private final GameOver gameOver = new GameOver(this);
@@ -49,7 +46,12 @@ public class Snake extends Game {
                 }
             }
 
-            enemies.forEach(enemy -> enemy.targetBall(balls));
+            enemies.forEach(enemy -> {
+                Ball ball = enemy.targetBall(balls);
+                if (ball != null) {
+                    enemy.follow(ball);
+                }
+            });
 
             if (!touched) {
                 snake.move();
@@ -91,7 +93,7 @@ public class Snake extends Game {
         double lengthX = x - enemyX;
         double lengthY = y - enemyY;
         double angle = Math.atan2(lengthY, lengthX);
-        enemy.speed(angle);
+        enemy.changeDirection(angle);
     }
 
     private void swallowBall() {
@@ -100,7 +102,7 @@ public class Snake extends Game {
             if (ball.touch(snake)) {
                 ballEaten(i, snake);
                 if (snake.length() % 5 == 0) {
-                    SnakeSprite enemy = createEnemy();
+                    EnemySnake enemy = createEnemy();
                     enemies.add(enemy);
                 }
                 break;
@@ -143,7 +145,7 @@ public class Snake extends Game {
                 double lengthX = x - ballX;
                 double lengthY = y - ballY;
                 double angle = Math.atan2(lengthY, lengthX);
-                snake.speed(angle);
+                snake.changeDirection(angle);
             }
         });
 
@@ -203,8 +205,8 @@ public class Snake extends Game {
         return ball;
     }
 
-    private SnakeSprite createEnemy() {
-        SnakeSprite enemy = new SnakeSprite(this, true);
+    private EnemySnake createEnemy() {
+        EnemySnake enemy = new EnemySnake(this);
         int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenWidth() - (int) SnakeSprite.DIAMETER / 2);
         int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenHeight() - (int) SnakeSprite.DIAMETER / 2);
         enemy.position(x, y);
