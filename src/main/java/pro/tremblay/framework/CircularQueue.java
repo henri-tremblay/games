@@ -1,7 +1,6 @@
 package pro.tremblay.framework;
 
 import java.util.ArrayDeque;
-import java.util.List;
 import java.util.stream.Stream;
 
 public class CircularQueue<T> {
@@ -25,7 +24,11 @@ public class CircularQueue<T> {
     }
 
     public Stream<T> getFirsts(int length) {
-        return array.stream().limit(length);
+        return getAll().limit(length);
+    }
+
+    public Stream<T> getAll() {
+        return array.stream();
     }
 
     public int size() {
