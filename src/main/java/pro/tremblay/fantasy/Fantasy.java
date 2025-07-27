@@ -227,7 +227,7 @@ public class Fantasy extends Game {
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
 
             try {
-                fondEcran(g, Color.GREEN);
+                background(g, Color.GREEN);
                 world.draw(g);
             } finally {
                 g.dispose();

@@ -62,7 +62,7 @@ public class Snake extends Game {
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
 
             try {
-                fondEcran(g, Color.BLACK);
+                background(g, Color.BLACK);
 
                 balls.forEach(b -> b.draw(g));
                 snake.draw(g);

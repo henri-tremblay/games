@@ -136,7 +136,7 @@ public class Pong extends Game {
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
 
             try {
-                fondEcran(g, Color.BLACK);
+                background(g, Color.BLACK);
                 ligneDuCentre(g);
 
                 left.draw(g);

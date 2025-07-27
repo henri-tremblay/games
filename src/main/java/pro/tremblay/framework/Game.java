@@ -43,7 +43,7 @@ public abstract class Game {
 
     protected abstract void init(JFrame frame);
 
-    protected void fondEcran(Graphics g, Color color) {
+    protected void background(Graphics g, Color color) {
         g.setColor(color);
         g.fillRect(0, 0, screenWidth(), screenHeight());
     }

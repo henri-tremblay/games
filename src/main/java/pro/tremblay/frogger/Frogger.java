@@ -415,7 +415,7 @@ public class Frogger extends Game {
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
 
             try {
-                fondEcran(g, Color.GREEN);
+                background(g, Color.GREEN);
                 victory.draw(g);
                 obstacles.forEach(s -> s.draw(g));
                 frog.draw(g);

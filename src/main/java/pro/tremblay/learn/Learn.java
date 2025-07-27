@@ -117,7 +117,7 @@ public class Learn extends Game {
 
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
             try {
-                fondEcran(g, Color.GRAY);
+                background(g, Color.GRAY);
 
                 apple.draw(g);
                 snake.draw(g);
@@ -149,8 +149,8 @@ public class Learn extends Game {
     }
 
     @Override
-    protected void fondEcran(Graphics g, Color color) {
-        super.fondEcran(g, color);
+    protected void background(Graphics g, Color color) {
+        super.background(g, color);
 
         g.setColor(Color.BLACK);
 
