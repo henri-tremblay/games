@@ -1,4 +1,4 @@
-package pro.tremblay.blokmonstre;
+package pro.tremblay.multimemory;
 
 import javafx.application.Application;
 import javafx.geometry.Pos;
@@ -13,9 +13,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.scene.text.Text;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.random.RandomGenerator;
 
 public class MultiMemory extends Application {
@@ -23,20 +21,6 @@ public class MultiMemory extends Application {
     private static final int SCREEN_WIDTH = 800;
     private static final int SCREEN_HEIGHT = 800;
     private static final int TILE_SIZE = 80;
-    private static final int COLUMNS = SCREEN_WIDTH / TILE_SIZE;
-    private static final int ROWS = SCREEN_HEIGHT / TILE_SIZE;
-    private static final Map<Integer, Multiplication> ANSWERS = allAnswers();
-
-    private static Map<Integer, Multiplication> allAnswers() {
-        Map<Integer, Multiplication> answers = new HashMap<>();
-        for (int x = 1; x <= 10; x++) {
-            for (int y = 1; y <= 10; y++) {
-                int result = x * y;
-                answers.put(result, new Multiplication(x, y));
-            }
-        }
-        return answers;
-    }
 
     public static void main(String[] args) {
         launch(args);
@@ -47,7 +31,7 @@ public class MultiMemory extends Application {
     private Pane tilePane = new Pane();
 
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
         stage.setTitle("MultiMemory");
         VBox root = createContent();
         stage.setScene(new Scene(root));

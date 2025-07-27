@@ -27,7 +27,7 @@ public class PlayerSnake extends SnakeSprite {
 
     @Override
     protected double speed() {
-        return boosted ? BOOST_SPEED : INITIAL_SPEED;
+        return boosted && length > 0 ? BOOST_SPEED : INITIAL_SPEED;
     }
 
     protected void drawMouth(Graphics g) {

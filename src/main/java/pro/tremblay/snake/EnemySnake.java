@@ -28,12 +28,6 @@ public class EnemySnake extends SnakeSprite {
         return Color.BLUE;
     }
 
-    @Override
-    protected void changeDirection(double angle) {
-        double speed = speed();
-        speed(Math.cos(angle) * speed, Math.sin(angle) * speed);
-    }
-
     protected void drawMouth(Graphics g) {
         g.drawLine((int) (x + 15), (int) (y + 30), (int) (x + 35), (int) (y + 30));
     }

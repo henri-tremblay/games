@@ -17,13 +17,11 @@ import java.util.List;
 import java.util.random.RandomGenerator;
 
 class World extends Sprite<Fantasy> {
-    private int width;
-    private int height;
     private Hero hero;
-    private List<Grass> grasses = new ArrayList<>();
-    private List<Tree> trees = new ArrayList<>();
-    private List<Wall> walls = new ArrayList<>();
-    private List<Chest> chests = new ArrayList<>();
+    private final List<Grass> grasses = new ArrayList<>();
+    private final List<Tree> trees = new ArrayList<>();
+    private final List<Wall> walls = new ArrayList<>();
+    private final List<Chest> chests = new ArrayList<>();
 
     protected World(Fantasy game) {
         super(game);
@@ -37,10 +35,9 @@ class World extends Sprite<Fantasy> {
     private void readWorld(String file) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(getClass().getResource(file).openStream()))) {
             String line = in.readLine();
-            width = line.length();
+            int width = line.length();
             for (int i = 0;; i++) {
                 if (line == null) {
-                    height = i;
                     break;
                 }
                 for (int j = 0; j < line.length(); j++) {
@@ -85,7 +82,7 @@ class World extends Sprite<Fantasy> {
         hero.draw(g);
     }
 
-    private void drawIfClose(Sprite s, Graphics g) {
+    private void drawIfClose(Sprite<?> s, Graphics g) {
         Point spritePosition = new Point((int) s.x(), (int) s.y());
         double distance = spritePosition.distance((int) hero.x(), (int) hero.y());
         if (distance > Hero.DIAMETER * 5) {

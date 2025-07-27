@@ -297,10 +297,7 @@ class River extends Sprite<Frogger> implements HasSpeed {
         if (touchTrunk(frog, line2)) {
             return false;
         }
-        if (touchTrunk(frog, line3)) {
-            return false;
-        }
-        return true;
+        return !touchTrunk(frog, line3);
     }
 
     private boolean touchTrunk(Sprite<Frogger> frog, Trunk[] line) {

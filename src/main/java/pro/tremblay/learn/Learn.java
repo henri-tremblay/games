@@ -70,10 +70,7 @@ class Snake extends Sprite<Learn> {
         if ( x < 0) {
             return true;
         }
-        if ( y < 0) {
-            return true;
-        }
-        return false;
+        return y < 0;
     }
 
     public void grow() {

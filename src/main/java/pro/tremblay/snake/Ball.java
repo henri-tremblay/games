@@ -17,7 +17,7 @@ class Ball extends Sprite<Snake> {
     @Override
     public void draw(Graphics g) {
         g.setColor(followers > 0 ? Color.BLUE : Color.RED);
-        // Draw face circle
+        // Draw face as a circle
         g.fillOval((int) x, (int) y, (int) SnakeSprite.DIAMETER / 2, (int) SnakeSprite.DIAMETER / 2);
     }
 

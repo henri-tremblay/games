@@ -129,7 +129,7 @@
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <mainClass>pro.tremblay.blokmonstre.BlokMonstre</mainClass>
+          <mainClass>pro.tremblay.multimemory.MultiMemory</mainClass>
         </configuration>
       </plugin>
       <plugin>

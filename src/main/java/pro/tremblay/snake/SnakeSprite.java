@@ -63,7 +63,7 @@ abstract class SnakeSprite extends Sprite<Snake> {
     @Override
     public void draw(Graphics g) {
         g.setColor(color());
-        // Draw face circle
+        // Draw face as a circle
         g.fillOval((int) x, (int) y, (int) DIAMETER, (int) DIAMETER);
 
         positions.getFirsts(length).forEach(p -> g.fillOval((int) p.x, (int) p.y, (int) DIAMETER, (int) DIAMETER));
