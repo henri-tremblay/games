@@ -202,6 +202,30 @@ class Chest extends Sprite<Fantasy> {
 }
 
 public class Fantasy extends Game {
+    // Add viewport tracking
+    private double viewportX = 0;
+    private double viewportY = 0;
+    
+    // Define world size larger than screen
+    private static final int WORLD_WIDTH = 3000;  // 3x screen width
+    private static final int WORLD_HEIGHT = 3000; // 3x screen height
+
+    // Add method to get world bounds
+    public Rectangle worldBounds() {
+        return new Rectangle(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    }
+
+    // Add method to update viewport position
+    private void updateViewport() {
+        Hero hero = world.hero();
+        // Center viewport on hero
+        viewportX = hero.x() - (screenWidth() / 2);
+        viewportY = hero.y() - (screenHeight() / 2);
+        
+        // Clamp viewport to world bounds
+        viewportX = Math.max(0, Math.min(viewportX, WORLD_WIDTH - screenWidth()));
+        viewportY = Math.max(0, Math.min(viewportY, WORLD_HEIGHT - screenHeight()));
+    }
 
     public static void main(String[] args) {
         Fantasy app = new Fantasy();
@@ -222,26 +246,20 @@ public class Fantasy extends Game {
 
     @Override
     protected void play(BufferStrategy bufferStrategy) {
-
         new Timer(100, e -> {
+            updateViewport();
+            
             Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
-
             try {
+                // Translate all drawing by viewport offset
+                g.translate(-viewportX, -viewportY);
+                
                 background(g, Color.GREEN);
                 world.draw(g);
             } finally {
                 g.dispose();
             }
-
             bufferStrategy.show();
-
-//            if(checkCollision()) {
-//                String treasure = chest.treasure();
-//                if (treasure != null) {
-//                    System.out.println(treasure);
-//                }
-//            }
-
         }).start();
     }
 
@@ -275,7 +293,10 @@ public class Fantasy extends Game {
     }
 
     private void moveIfPossible(double proposedX, double proposedY) {
-        if (!world.touch(proposedX, proposedY)) {
+        // Add world bounds checking
+        if (proposedX >= 0 && proposedX <= WORLD_WIDTH - Hero.DIAMETER &&
+            proposedY >= 0 && proposedY <= WORLD_HEIGHT - Hero.DIAMETER &&
+            !world.touch(proposedX, proposedY)) {
             world.hero().position(proposedX, proposedY);
         }
     }
