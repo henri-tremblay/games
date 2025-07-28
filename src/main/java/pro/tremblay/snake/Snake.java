@@ -1,11 +1,11 @@
 package pro.tremblay.snake;
 
 import pro.tremblay.framework.Game;
+import pro.tremblay.framework.Geometry;
 
 import javax.swing.JFrame;
 import javax.swing.Timer;
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -232,18 +232,20 @@ public class Snake extends Game {
     }
 
     private Ball findFreeSpot() {
-        int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldWidth() - (int) SnakeSprite.DIAMETER / 2);
-        int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldHeight() - (int) SnakeSprite.DIAMETER / 2);
+        Point p = randomPoint();
         Ball ball = new Ball(this);
-        ball.position(x, y);
+        ball.position(p.x, p.y);
         return ball;
     }
 
     private EnemySnake createEnemy() {
         EnemySnake enemy = new EnemySnake(this);
-        int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldWidth() - (int) SnakeSprite.DIAMETER / 2);
-        int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldHeight() - (int) SnakeSprite.DIAMETER / 2);
-        enemy.position(x, y);
+        Point p = randomPoint();
+        while(tooCloseToSnake(p.x, p.y)) {
+            p = randomPoint();
+        }
+
+        enemy.position(p.x, p.y);
         int vx = gaussianSpeed();
         int vy = gaussianSpeed();
         enemy.speed(vx, vy);
@@ -251,6 +253,25 @@ public class Snake extends Game {
             enemy.addRing();
         }
         return enemy;
+    }
+
+    private Point randomPoint() {
+        int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldWidth() - (int) SnakeSprite.DIAMETER / 2);
+        int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldHeight() - (int) SnakeSprite.DIAMETER / 2);
+        return new Point(x, y);
+    }
+
+    private boolean tooCloseToSnake(int x, int y) {
+        double snakeX = snake.x() + SnakeSprite.DIAMETER / 2;
+        double snakeY = snake.y() + SnakeSprite.DIAMETER / 2;
+        double enemyX = x + SnakeSprite.DIAMETER / 2;
+        double enemyY = y + SnakeSprite.DIAMETER / 2;
+        double safeZoneR = SnakeSprite.DIAMETER / 2 * 3;
+        double enemyR = SnakeSprite.DIAMETER / 2;
+        return Geometry.circleIntersect(
+                snakeX, snakeY, safeZoneR,
+                enemyX, enemyY, enemyR
+        );
     }
 
     private int gaussianSpeed() {
