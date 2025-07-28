@@ -44,16 +44,16 @@ abstract class SnakeSprite extends Sprite<Snake> {
         if (y < 0) {
             y = 0;
             vy = -vy;
-        } else if (y + DIAMETER > game.screenHeight()) {
-            y = game.screenHeight() - DIAMETER;
+        } else if (y + DIAMETER > game.worldHeight()) {
+            y = game.worldHeight() - DIAMETER;
             vy = -vy;
         }
 
         if (x < 0) {
             x = 0;
             vx = -vx;
-        } else if (x + DIAMETER > game.screenWidth()) {
-            x = game.screenWidth() - DIAMETER;
+        } else if (x + DIAMETER > game.worldWidth()) {
+            x = game.worldWidth() - DIAMETER;
             vx = -vx;
         }
 

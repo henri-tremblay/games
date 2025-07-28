@@ -33,11 +33,27 @@ public class Snake extends Game {
     private final GameOver gameOver = new GameOver(this);
     private boolean touched = false;
 
+    // Add viewport tracking
+    private double viewportX = 0;
+    private double viewportY = 0;
+
+    @Override
+    public int worldWidth() {
+        return super.worldWidth() * 2;
+    }
+
+    @Override
+    public int worldHeight() {
+        return super.worldHeight() * 2;
+    }
+
     @Override
     protected void play(BufferStrategy bufferStrategy) {
         AtomicInteger boostTime = new AtomicInteger(0);
 
         new Timer(100, e -> {
+            updateViewport();
+
             if (snake.boosted()) {
                 int time = boostTime.incrementAndGet();
                 if (time > 8) {
@@ -55,7 +71,6 @@ public class Snake extends Game {
 
             if (!touched) {
                 snake.move();
-//                enemies.forEach(this::enemiesFollowSnake);
                 enemies.forEach(SnakeSprite::move);
             }
 
@@ -64,9 +79,15 @@ public class Snake extends Game {
             try {
                 background(g, Color.BLACK);
 
+                // Translate all drawing by viewport offset
+                g.translate(-viewportX, -viewportY);
+
                 balls.forEach(b -> b.draw(g));
                 snake.draw(g);
                 enemies.forEach(enemy -> enemy.draw(g));
+
+                g.translate(viewportX, viewportY);
+
                 score.draw(g);
                 if (touched) {
                     gameOver.draw(g);
@@ -83,6 +104,19 @@ public class Snake extends Game {
             
             bufferStrategy.show();
         }).start();
+    }
+
+    /**
+     * Update the viewport to follow the snake
+     */
+    private void updateViewport() {
+        // Center viewport on snake
+        viewportX = snake.x() - (screenWidth() / 2);
+        viewportY = snake.y() - (screenHeight() / 2);
+
+        // Clamp viewport to world bounds
+        viewportX = Math.max(0, Math.min(viewportX, worldWidth() - screenWidth()));
+        viewportY = Math.max(0, Math.min(viewportY, worldHeight() - screenHeight()));
     }
 
     private void enemiesFollowSnake(SnakeSprite enemy) {
@@ -140,8 +174,8 @@ public class Snake extends Game {
             public void mouseMoved(MouseEvent e) {
                 double ballX = snake.x();
                 double ballY = snake.y();
-                double x = e.getX();
-                double y = e.getY();
+                double x = e.getX() + viewportX;
+                double y = e.getY() + viewportY;
                 double lengthX = x - ballX;
                 double lengthY = y - ballY;
                 double angle = Math.atan2(lengthY, lengthX);
@@ -191,15 +225,15 @@ public class Snake extends Game {
 
     private void initBalls() {
         balls.clear();
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < 200; i++) {
             Ball ball = findFreeSpot();
             balls.add(ball);
         }
     }
 
     private Ball findFreeSpot() {
-        int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenWidth() - (int) SnakeSprite.DIAMETER / 2);
-        int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenHeight() - (int) SnakeSprite.DIAMETER / 2);
+        int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldWidth() - (int) SnakeSprite.DIAMETER / 2);
+        int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldHeight() - (int) SnakeSprite.DIAMETER / 2);
         Ball ball = new Ball(this);
         ball.position(x, y);
         return ball;
@@ -207,8 +241,8 @@ public class Snake extends Game {
 
     private EnemySnake createEnemy() {
         EnemySnake enemy = new EnemySnake(this);
-        int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenWidth() - (int) SnakeSprite.DIAMETER / 2);
-        int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, screenHeight() - (int) SnakeSprite.DIAMETER / 2);
+        int x = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldWidth() - (int) SnakeSprite.DIAMETER / 2);
+        int y = RANDOM.nextInt((int) SnakeSprite.DIAMETER / 2, worldHeight() - (int) SnakeSprite.DIAMETER / 2);
         enemy.position(x, y);
         int vx = gaussianSpeed();
         int vy = gaussianSpeed();
@@ -237,7 +271,7 @@ public class Snake extends Game {
 
     private void initSnake() {
         snake.clearRings();
-        snake.position((screenWidth() - SnakeSprite.DIAMETER) / 2.0, (screenHeight() - SnakeSprite.DIAMETER) / 2.0);
+        snake.position((worldWidth() - SnakeSprite.DIAMETER) / 2.0, (worldHeight() - SnakeSprite.DIAMETER) / 2.0);
         snake.position(100, 100);
         snake.setInitialSpeed();
     }

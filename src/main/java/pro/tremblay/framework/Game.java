@@ -21,6 +21,14 @@ public abstract class Game {
         return 768;
     }
 
+    public int worldWidth() {
+        return screenWidth();
+    }
+
+    public int worldHeight() {
+        return screenHeight();
+    }
+
     public Rectangle bounds() {
         return new Rectangle(0, 0, screenWidth(), screenHeight());
     }
