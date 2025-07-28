@@ -1,10 +1,17 @@
 package pro.tremblay.framework;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.image.BufferStrategy;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public abstract class Game {
+
+    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("translation.resource", Locale.CANADA_FRENCH);
 
     public int screenWidth() {
         return 1024;
@@ -35,6 +42,10 @@ public abstract class Game {
         BufferStrategy bufferStrategy = frame.getBufferStrategy();
 
         play(bufferStrategy);
+    }
+
+    public String resource(String key) {
+        return resourceBundle.getString(key);
     }
 
     protected abstract String frameTitle();

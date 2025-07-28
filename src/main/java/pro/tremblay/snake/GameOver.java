@@ -17,7 +17,7 @@ class GameOver extends Sprite<Snake> {
     @Override
     public void draw(Graphics g) {
         g.setColor(Color.YELLOW);
-        g.drawString("Appuyez sur Entrée pour rejouer", 280, 250);
+        g.drawString(game.resource("enterToReplay"), 280, 250);
 
         Font currentFont = g.getFont();
         Font newFont = currentFont.deriveFont(currentFont.getSize() * 5F);
@@ -25,6 +25,6 @@ class GameOver extends Sprite<Snake> {
 
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.drawString("Fin de la partie", 280, 200);
+        g.drawString(game.resource("endOfGame"), 280, 200);
     }
 }

@@ -25,6 +25,6 @@ class Score extends Sprite<Snake> {
 
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.drawString("Longueur: " + snake.length(), (int) x, (int) y);
+        g.drawString(game.resource("length") + ": " + snake.length(), (int) x, (int) y);
     }
 }
