@@ -141,7 +141,7 @@ public class Snake extends Game {
             Ball ball = balls.get(i);
             if (ball.touch(snake)) {
                 ballEaten(i, snake);
-                if (snake.length() % 5 == 0) {
+                if (snake.length() % 2 == 0) {
                     EnemySnake enemy = createEnemy();
                     enemies.add(enemy);
                 }
