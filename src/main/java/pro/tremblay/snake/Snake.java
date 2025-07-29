@@ -98,8 +98,10 @@ public class Snake extends Game {
 
             swallowBall();
 
-            if (enemies.stream().anyMatch(enemy -> enemy.touch(snake))) {
+            if (enemies.stream().anyMatch(snake::touch)) {
                 touched = true;
+            } else {
+                enemies.removeIf(enemy -> enemy.touch(snake));
             }
             
             bufferStrategy.show();

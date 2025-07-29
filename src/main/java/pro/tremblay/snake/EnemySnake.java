@@ -4,7 +4,6 @@ import pro.tremblay.framework.Geometry;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.geom.Point2D;
 import java.util.List;
 
 public class EnemySnake extends SnakeSprite {
@@ -67,27 +66,4 @@ public class EnemySnake extends SnakeSprite {
         return closest;
     }
 
-    /**
-     * Check if an enemy touch the snake. "this" is the enemy
-     *
-     * @param snake the snake
-     * @return if touched
-     */
-    boolean touch(PlayerSnake snake) {
-        // If any part of the enemy "This" touches the snake
-        double radius = SnakeSprite.DIAMETER / 2;
-        double x = snake.x() + radius;
-        double y = snake.y() + radius;
-
-        List<Point2D.Double> all = positions.getFirsts(length)
-                .toList();
-        for (Point2D.Double p : all) {
-            double px = p.x + radius;
-            double py = p.y + radius;
-            if (Geometry.circleIntersect(x, y, radius, px, py, radius)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
