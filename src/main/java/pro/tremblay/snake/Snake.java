@@ -47,6 +47,10 @@ public class Snake extends Game {
         return super.worldHeight() * 2;
     }
 
+    public int numberOfEnnemies() {
+        return enemies.size();
+    }
+
     @Override
     protected void play(BufferStrategy bufferStrategy) {
         AtomicInteger boostTime = new AtomicInteger(0);
