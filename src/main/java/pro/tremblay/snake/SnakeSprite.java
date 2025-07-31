@@ -7,7 +7,6 @@ import pro.tremblay.framework.Sprite;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
 import java.util.List;
 
 abstract class SnakeSprite extends Sprite<Snake> {
@@ -26,8 +25,8 @@ abstract class SnakeSprite extends Sprite<Snake> {
         return Math.sqrt(vx * vx + vy * vy);
     }
 
-    public List<Point2D.Double> positions() {
-        return positions.getAll().toList();
+    public List<Point2D.Double> rings() {
+        return positions.getAll().limit(length).toList();
     }
 
     @Override

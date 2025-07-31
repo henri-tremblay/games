@@ -113,7 +113,7 @@ public class Snake extends Game {
                     if (enemy.touch(snake)) {
                         it.remove();
                         enemy.unfollow();
-                        enemy.positions().stream()
+                        enemy.rings().stream()
                                 .map(p -> createBall(p, Ball.Type.ENEMY))
                                 .forEach(balls::add);
                     }
