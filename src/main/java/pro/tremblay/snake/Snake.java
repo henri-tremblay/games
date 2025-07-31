@@ -248,7 +248,7 @@ public class Snake extends Game {
 
     private void initBalls() {
         balls.clear();
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 400; i++) {
             Ball ball = findFreeSpot();
             balls.add(ball);
         }
