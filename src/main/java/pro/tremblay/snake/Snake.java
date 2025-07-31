@@ -114,7 +114,7 @@ public class Snake extends Game {
                         it.remove();
                         enemy.unfollow();
                         enemy.positions().stream()
-                                .map(this::createBall)
+                                .map(p -> createBall(p, Ball.Type.ENEMY))
                                 .forEach(balls::add);
                     }
                 }
@@ -169,9 +169,11 @@ public class Snake extends Game {
     }
 
     private void ballEaten(int index, SnakeSprite snake) {
-        balls.remove(index);
+        Ball ball = balls.remove(index);
         snake.addRing();
-        addBallIn5seconds();
+        if (ball.type() == Ball.Type.NORMAL) {
+            addBallIn5seconds();
+        }
     }
 
     private void addBallIn5seconds() {
@@ -251,11 +253,11 @@ public class Snake extends Game {
 
     private Ball findFreeSpot() {
         Point p = randomPoint();
-        return createBall(p);
+        return createBall(p, Ball.Type.NORMAL);
     }
 
-    private Ball createBall(Point2D p) {
-        Ball ball = new Ball(this);
+    private Ball createBall(Point2D p, Ball.Type type) {
+        Ball ball = new Ball(this, type);
         ball.position(p.getX(), p.getY());
         return ball;
     }

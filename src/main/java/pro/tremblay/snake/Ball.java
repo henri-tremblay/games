@@ -8,10 +8,26 @@ import java.awt.Graphics;
 
 class Ball extends Sprite<Snake> {
 
+    enum Type {
+        NORMAL,
+        ENEMY
+    }
+
     private int followers = 0;
+    private final Type type;
 
     protected Ball(Snake game) {
         super(game);
+        this.type = Type.NORMAL;
+    }
+
+    protected Ball(Snake game, Type type) {
+        super(game);
+        this.type = type;
+    }
+
+    public Type type() {
+        return type;
     }
 
     @Override
