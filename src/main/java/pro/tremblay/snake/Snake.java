@@ -41,12 +41,12 @@ public class Snake extends Game {
 
     @Override
     public int worldWidth() {
-        return super.worldWidth() * 2;
+        return super.worldWidth() * 3;
     }
 
     @Override
     public int worldHeight() {
-        return super.worldHeight() * 2;
+        return super.worldHeight() * 3;
     }
 
     public int numberOfEnnemies() {
