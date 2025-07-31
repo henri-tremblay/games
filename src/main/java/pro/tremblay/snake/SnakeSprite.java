@@ -7,13 +7,14 @@ import pro.tremblay.framework.Sprite;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.List;
 
 abstract class SnakeSprite extends Sprite<Snake> {
     static final double DIAMETER = 50;
 
     protected int length = 0;
-    protected final CircularQueue<Point2D.Double> positions = new CircularQueue<>(100);
+    protected final CircularQueue<Point2D.Double> positions = new CircularQueue<>(10_000);
 
     protected SnakeSprite(Snake game) {
         super(game);
@@ -23,6 +24,10 @@ abstract class SnakeSprite extends Sprite<Snake> {
 
     protected double speed() {
         return Math.sqrt(vx * vx + vy * vy);
+    }
+
+    public List<Point2D.Double> positions() {
+        return positions.getAll().toList();
     }
 
     @Override

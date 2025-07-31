@@ -10,9 +10,11 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
@@ -105,7 +107,17 @@ public class Snake extends Game {
             if (enemies.stream().anyMatch(snake::touch)) {
                 touched = true;
             } else {
-                enemies.removeIf(enemy -> enemy.touch(snake));
+                ListIterator<EnemySnake> it = enemies.listIterator();
+                while(it.hasNext()) {
+                    EnemySnake enemy = it.next();
+                    if (enemy.touch(snake)) {
+                        it.remove();
+                        enemy.unfollow();
+                        enemy.positions().stream()
+                                .map(this::createBall)
+                                .forEach(balls::add);
+                    }
+                }
             }
             
             bufferStrategy.show();
@@ -239,8 +251,12 @@ public class Snake extends Game {
 
     private Ball findFreeSpot() {
         Point p = randomPoint();
+        return createBall(p);
+    }
+
+    private Ball createBall(Point2D p) {
         Ball ball = new Ball(this);
-        ball.position(p.x, p.y);
+        ball.position(p.getX(), p.getY());
         return ball;
     }
 

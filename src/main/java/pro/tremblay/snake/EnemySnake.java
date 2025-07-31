@@ -33,14 +33,18 @@ public class EnemySnake extends SnakeSprite {
 
     void follow(Ball closest) {
         if (closest != closestBall) {
-            if (closestBall != null) {
-                closestBall.unfollowed();
-            }
+            unfollow();
             closestBall = closest;
             closestBall.followed();
         }
         double angle = Geometry.angleBetween(x, y, closest.x(), closest.y());
         changeDirection(angle);
+    }
+
+    public void unfollow() {
+        if (closestBall != null) {
+            closestBall.unfollowed();
+        }
     }
 
     Ball targetBall(List<Ball> balls) {
