@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
 
@@ -113,7 +114,9 @@ public class Snake extends Game {
                     if (enemy.touch(snake)) {
                         it.remove();
                         enemy.unfollow();
+                        AtomicInteger take = new AtomicInteger(0);
                         enemy.rings().stream()
+                                .filter(_ -> take.getAndIncrement() % 4 == 0)
                                 .map(p -> createBall(p, Ball.Type.ENEMY))
                                 .forEach(balls::add);
                     }
