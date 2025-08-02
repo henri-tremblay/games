@@ -4,19 +4,20 @@ import pro.tremblay.framework.CircularQueue;
 import pro.tremblay.framework.Geometry;
 import pro.tremblay.framework.Sprite;
 
-import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.List;
 
 abstract class SnakeSprite extends Sprite<Snake> {
     static final double DIAMETER = 50;
 
+    private final String name;
     protected int length = 0;
     protected final CircularQueue<Point2D.Double> positions = new CircularQueue<>(10_000);
 
-    protected SnakeSprite(Snake game) {
+    protected SnakeSprite(Snake game, String name) {
         super(game);
+        this.name = name;
     }
 
     protected abstract Color color();
@@ -78,6 +79,19 @@ abstract class SnakeSprite extends Sprite<Snake> {
 
         drawEyes(g);
         drawMouth(g);
+        drawName(g);
+    }
+
+    private void drawName(Graphics g) {
+        g.setColor(Color.WHITE);
+        Font currentFont = g.getFont();
+        Font newFont = currentFont.deriveFont(currentFont.getSize() * 1.4F);
+        g.setFont(newFont);
+
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.drawString(name, (int) x, (int) y - 2);
+        g.setFont(currentFont);
     }
 
     private void drawEyes(Graphics g) {

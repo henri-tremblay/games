@@ -2,16 +2,12 @@ package pro.tremblay.snake;
 
 import pro.tremblay.framework.Sprite;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 
-class Score extends Sprite<Snake> {
+class LeaderBoard extends Sprite<Snake> {
     private final SnakeSprite snake;
 
-    public Score(Snake game, SnakeSprite snake) {
+    public LeaderBoard(Snake game, SnakeSprite snake) {
         super(game);
         this.snake = snake;
     }

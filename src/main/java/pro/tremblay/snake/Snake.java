@@ -1,5 +1,6 @@
 package pro.tremblay.snake;
 
+import com.github.javafaker.Faker;
 import pro.tremblay.framework.Game;
 import pro.tremblay.framework.Geometry;
 
@@ -13,12 +14,9 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
 
@@ -31,6 +29,7 @@ public class Snake extends Game {
         app.start();
     }
 
+    private final Faker faker = new Faker();
     private final PlayerSnake snake = new PlayerSnake(this);
     private final List<EnemySnake> enemies = new ArrayList<>();
     private final Score score = new Score(this, snake);
@@ -268,7 +267,8 @@ public class Snake extends Game {
     }
 
     private EnemySnake createEnemy() {
-        EnemySnake enemy = new EnemySnake(this);
+        String firstName = faker.name().firstName(); // Emory
+        EnemySnake enemy = new EnemySnake(this, firstName);
         Point p = randomPoint();
         while(tooCloseToSnake(p.x, p.y)) {
             p = randomPoint();

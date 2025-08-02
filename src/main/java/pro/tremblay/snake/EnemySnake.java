@@ -10,8 +10,8 @@ public class EnemySnake extends SnakeSprite {
 
     private Ball closestBall = null;
 
-    public EnemySnake(Snake game) {
-        super(game);
+    public EnemySnake(Snake game, String name) {
+        super(game, name);
     }
 
     @Override

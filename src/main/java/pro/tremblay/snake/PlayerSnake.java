@@ -11,7 +11,7 @@ public class PlayerSnake extends SnakeSprite {
     private boolean boosted = false;
 
     public PlayerSnake(Snake game) {
-        super(game);
+        super(game, game.resource("me"));
     }
 
     public void setInitialSpeed() {
