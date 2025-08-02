@@ -20,6 +20,10 @@ abstract class SnakeSprite extends Sprite<Snake> {
         this.name = name;
     }
 
+    public String name() {
+        return name;
+    }
+
     protected abstract Color color();
 
     protected double speed() {

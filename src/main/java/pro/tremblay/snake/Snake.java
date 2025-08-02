@@ -33,6 +33,7 @@ public class Snake extends Game {
     private final PlayerSnake snake = new PlayerSnake(this);
     private final List<EnemySnake> enemies = new ArrayList<>();
     private final Score score = new Score(this, snake);
+    private final LeaderBoard leaderBoard = new LeaderBoard(this, enemies);
     private final List<Ball> balls = new CopyOnWriteArrayList<>();
     private final GameOver gameOver = new GameOver(this);
     private boolean touched = false;
@@ -97,6 +98,7 @@ public class Snake extends Game {
                 g.translate(viewportX, viewportY);
 
                 score.draw(g);
+                leaderBoard.draw(g);
                 if (touched) {
                     gameOver.draw(g);
                 }
@@ -239,6 +241,7 @@ public class Snake extends Game {
         initSnake();
         initBalls();
         initScore();
+        initLeaderBoard();
         initEnemies();
         touched = false;
     }
@@ -328,5 +331,9 @@ public class Snake extends Game {
 
     private void initScore() {
         score.position(10, 30);
+    }
+
+    private void initLeaderBoard() {
+        leaderBoard.position(screenWidth() - 220, 30);
     }
 }
