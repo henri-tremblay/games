@@ -13,8 +13,10 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,12 +44,12 @@ public class Snake extends Game {
 
     @Override
     public int worldWidth() {
-        return super.worldWidth() * 3;
+        return super.worldWidth() * 5;
     }
 
     @Override
     public int worldHeight() {
-        return super.worldHeight() * 3;
+        return super.worldHeight() * 5;
     }
 
     public int numberOfEnnemies() {
@@ -248,7 +250,7 @@ public class Snake extends Game {
 
     private void initBalls() {
         balls.clear();
-        for (int i = 0; i < 400; i++) {
+        for (int i = 0; i < 1500; i++) {
             Ball ball = findFreeSpot();
             balls.add(ball);
         }
