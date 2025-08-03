@@ -32,7 +32,7 @@ class LeaderBoard extends Sprite<Snake> {
 
         List<EnemySnake> best = enemies.stream()
                 .sorted(Comparator.comparingInt(EnemySnake::length).reversed())
-                .limit(10)
+                .limit(15)
                 .toList();
         for (int i = 0; i < best.size(); i++) {
             EnemySnake enemy = best.get(i);
