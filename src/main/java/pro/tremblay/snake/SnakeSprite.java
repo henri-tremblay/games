@@ -10,9 +10,11 @@ import java.util.List;
 
 abstract class SnakeSprite extends Sprite<Snake> {
     static final double DIAMETER = 50;
+    private static final int APPETITE = 1;
 
     private final String name;
     protected int length = 0;
+    protected int ballsEaten = 0;
     protected final CircularQueue<Point2D.Double> positions = new CircularQueue<>(10_000);
 
     protected SnakeSprite(Snake game, String name) {
@@ -28,6 +30,15 @@ abstract class SnakeSprite extends Sprite<Snake> {
 
     protected double speed() {
         return Math.sqrt(vx * vx + vy * vy);
+    }
+
+    public boolean eatBall() {
+        ballsEaten++;
+        if (ballsEaten >= APPETITE) {
+            ballsEaten = 0;
+            return true;
+        }
+        return false;
     }
 
     public List<Point2D.Double> rings() {
