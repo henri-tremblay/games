@@ -24,7 +24,7 @@ public class Snake extends Game {
 
     private static final RandomGenerator RANDOM = RandomGenerator.getDefault();
 
-    public static void main(String[] args) {
+    public static void main() {
         Snake app = new Snake();
         app.start();
     }
